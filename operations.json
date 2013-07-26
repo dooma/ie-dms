@@ -1,0 +1,13 @@
+exports.import = function (link) {
+    if (!link.data) {
+        link.send(200, 'No data sent to me');
+        return;
+    }
+}
+
+exports.export = function (link) {
+    if (!link.data) {
+        link.send(200, 'No data sent to me');
+        return;
+    }
+}
