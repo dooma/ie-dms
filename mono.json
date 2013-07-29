@@ -1,6 +1,6 @@
 {
     "source": "github",
-    "owner": "CalinSalagean",
+    "owner": "gabipetrovay",
     "name": "ie-dms",
     "dependencies": [
         "/main.js",
