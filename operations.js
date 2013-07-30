@@ -1,3 +1,5 @@
+var model = require('./model.js');
+
 exports.import = function (link) {
     if (!link.data) {
         link.send(200, 'No data sent to me');
@@ -6,9 +8,19 @@ exports.import = function (link) {
 }
 
 exports.uploadImage = function (link) {
-    if (!link.files || !link.files.image || !link.files.image.size) {
-        return link.send(400, { error: 'Invalid image upload' });
+    model.validateFile(link.files, function (error) {
+        if (error) {
+            link.send(400, error);
+            return;
+        }
+    });
+
+    if (!link.data) {
+        link.send(400, 'No data sent to me');
+        return;
     }
+
+    link.send(200, 'File uploaded');
 }
 
 exports.export = function (link) {
