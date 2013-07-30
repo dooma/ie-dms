@@ -13,17 +13,40 @@ exports.getFirstRow = function (file, options, callback) {
         callback = options;
     }
 
-    CSV.parse(file, options, function (error, row) {
+    var filePath = M.config.APPLICATION_ROOT + M.config.app.id + '/' + file;
+
+    CSV.parse(filePath, options, function (error, row, next) {
         if (error) {
             callback(error);
             return;
         }
 
-        console.log(row);
         if (row !== null) {
             callback(null, row);
             return;
         }
     });
 
+};
+
+exports.getOptions = function (options, callback) {
+    if (!options || !options.charset || !options.separator) {
+        callback('Invalid options');
+        return;
+    }
+
+    var tmp = {
+        charset: options.charset
+    }
+
+    switch (options.separator) {
+        case 'semicolon':
+            tmp.delimiter = ';';
+            break;
+        case 'comma':
+            tmp.delimiter = ',';
+            break;
+    }
+
+    callback(null, tmp);
 };
