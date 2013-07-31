@@ -14,4 +14,35 @@ module.exports = function (config) {
         }
     });
 
+    var setElementsToDom = function (parentElem, elements) {
+        var length = elements.length;
+        var select = '<select class="span2">';
+        for (var i = 0; i < length; ++i) {
+            select += '<option value="' + elements[i] + '">' + elements[i] + '</option>';
+        }
+        select += '</select>';
+
+        $(parentElem).append(select);
+    };
+
+    // TODO: Insert Fields from Templates.
+    var setFieldsToDom = function (parentElem, times){
+        var elem = '<div class="control-group"><label class="control-label"></label>' +
+            '<div class="controls fields"></div></div>';
+
+        for (; times; times--) { $(parentElem).after(elem); }
+    };
+
+    $('#uploadFrame').load(function () {
+        var data = eval($('#uploadFrame').contents().find('body pre').html());
+
+        // check if server throwed an error
+        if (typeof(data) === 'string') {
+        } else if (typeof(data) === 'object') {
+            // set array element to each select
+            setFieldsToDom('#containerStage2 form .control-group:first', data.length);
+            setElementsToDom('.fields', data);
+        }
+    });
+
 }
