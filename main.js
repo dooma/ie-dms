@@ -1,6 +1,8 @@
 module.exports = function (config) {
 
     var self = this;
+    var templates;
+    var data;
 
     $('#csvUpload').change(function () {
         var fileName = $(this).val().split('.');
@@ -13,28 +15,45 @@ module.exports = function (config) {
         }
     });
 
-    var buildOptions = function (data) {
+    var appendSelectToDom = function (parentElem, data, select) {
         var options = '';
         var length = data.length;
 
         for (var i = 0, options = ''; i < length; ++i) {
             options += '<option value="' + data[i] + '">' + data[i] + '</option>';
         }
-        return options;
+
+        if (select) {
+            $(parentElem).append('<select class="span2">' + options + '</select>');
+        } else {
+            $(parentElem).append(options);
+        }
     };
 
-    var appendSelectToDom = function (parentElem, elements, id) {
-        var select = '<select class="span2" id="' + id + '" name="' + id + '">' + buildOptions(elements) + '</select>';
-
-        $(parentElem).append(select);
+    var setFieldsToDom = function (parentElem, schema){
+        for (key in schema) {
+            $(parentElem).after('<div class="control-group">' +
+            '<label class="control-label">'+ key +'</label>' +
+            '<div class="controls fields"></div></div>');
+        }
     };
 
-    // TODO: Insert Fields from Templates.
-    var setFieldsToDom = function (parentElem, times){
-        var elem = '<div class="control-group"><label class="control-label"></label>' +
-            '<div class="controls fields"></div></div>';
+    var setTemplateFields = function (docs, selected) {
+        var ios = 0;
+        templates = JSON.parse(JSON.stringify(docs));
 
-        for (; times; times--) { $(parentElem).after(elem); }
+        for (var i = 0; i < docs.length; ++i) {
+            docs[i] = docs[i].name;
+        }
+
+        if (selected) {
+            ios = docs.indexOf(selected);
+        } else {
+            appendSelectToDom('#template', docs);
+        };
+
+        setFieldsToDom('#containerStage2 form .control-group:first', templates[ios].schema);
+        appendSelectToDom('.fields', data, true);
     };
 
     var loadTemplates = function () {
@@ -51,24 +70,12 @@ module.exports = function (config) {
                 return;
             }
 
-            var templates = docs;
-            console.log(templates);
-            // [Object, Object, Object, Object, Object]
-
-            for (var i = 0; i < docs.length; ++i) {
-                docs[i] = docs[i].name;
-            }
-
-            console.log(templates);
-            // ["Templates", "Roles", "Lists", "Users", "Articles"]
-
-            appendSelectToDom('#containerStage2 form .control-group:first .controls', docs, 'template');
-            //setFieldsToDom('#containerStage2 form .control-group:first', data.length);
+            setTemplateFields(docs);
         });
     };
 
     $('#uploadFrame').load(function () {
-        var data = eval($('#uploadFrame').contents().find('body pre').html());
+        data = eval($('#uploadFrame').contents().find('body pre').html());
 
 
         // check if server throwed an error
@@ -77,12 +84,14 @@ module.exports = function (config) {
         } else if (typeof(data) === 'object') {
             // set array element to each select
             loadTemplates();
-
-            appendSelectToDom('.fields', data);
         }
     });
 
-    $('#containerStage2 #template').change(function (object) {
+    $('#containerStage2 #template').change(function () {
+        $('#containerStage2 form .control-group:not(:first)').remove();
+
+        var selected = $(this).find('option:selected').val();
+        setTemplateFields(templates, selected);
     });
 
 }
