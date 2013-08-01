@@ -1,7 +1,6 @@
 module.exports = function (config) {
 
     var self = this;
-    var options = {};
 
     $('#csvUpload').change(function () {
         var fileName = $(this).val().split('.');
@@ -14,13 +13,18 @@ module.exports = function (config) {
         }
     });
 
-    var setElementsToDom = function (parentElem, elements) {
-        var length = elements.length;
-        var select = '<select class="span2">';
-        for (var i = 0; i < length; ++i) {
-            select += '<option value="' + elements[i] + '">' + elements[i] + '</option>';
+    var buildOptions = function (data) {
+        var options = '';
+        var length = data.length;
+
+        for (var i = 0, options = ''; i < length; ++i) {
+            options += '<option value="' + data[i] + '">' + data[i] + '</option>';
         }
-        select += '</select>';
+        return options;
+    };
+
+    var appendSelectToDom = function (parentElem, elements, id) {
+        var select = '<select class="span2" id="' + id + '" name="' + id + '">' + buildOptions(elements) + '</select>';
 
         $(parentElem).append(select);
     };
@@ -33,16 +37,52 @@ module.exports = function (config) {
         for (; times; times--) { $(parentElem).after(elem); }
     };
 
+    var loadTemplates = function () {
+        var crudObj = {
+            t: '_template',
+            q: {},
+            o: {},
+            f: {}
+        }
+
+        self.emit('find', crudObj, function (error, docs) {
+            if (error) {
+                console.log(error);
+                return;
+            }
+
+            var templates = docs;
+            console.log(templates);
+            // [Object, Object, Object, Object, Object]
+
+            for (var i = 0; i < docs.length; ++i) {
+                docs[i] = docs[i].name;
+            }
+
+            console.log(templates);
+            // ["Templates", "Roles", "Lists", "Users", "Articles"]
+
+            appendSelectToDom('#containerStage2 form .control-group:first .controls', docs, 'template');
+            //setFieldsToDom('#containerStage2 form .control-group:first', data.length);
+        });
+    };
+
     $('#uploadFrame').load(function () {
         var data = eval($('#uploadFrame').contents().find('body pre').html());
 
+
         // check if server throwed an error
         if (typeof(data) === 'string') {
+            console.log(data);
         } else if (typeof(data) === 'object') {
             // set array element to each select
-            setFieldsToDom('#containerStage2 form .control-group:first', data.length);
-            setElementsToDom('.fields', data);
+            loadTemplates();
+
+            appendSelectToDom('.fields', data);
         }
+    });
+
+    $('#containerStage2 #template').change(function (object) {
     });
 
 }
