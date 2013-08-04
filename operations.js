@@ -5,6 +5,15 @@ exports.import = function (link) {
         link.send(200, 'No data sent to me');
         return;
     }
+    console.log(link.data);
+    model.importData(link.data, function (error) {
+        if (error) {
+            link.send(400, error);
+            return;
+        }
+
+    });
+    link.send(200, 'Data received');
 };
 
 exports.uploadImage = function (link) {

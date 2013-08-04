@@ -50,3 +50,21 @@ exports.getOptions = function (options, callback) {
 
     callback(null, tmp);
 };
+
+exports.importData = function (data, callback) {
+    var crudObj = {
+        t: '_template',
+        q: {},
+        o: {},
+        f: {}
+    }
+
+    self.emit('find', crudObj, function (error, docs) {
+        if (error) {
+            console.log(error);
+            return;
+        }
+
+        console.log(docs);
+    });
+};
