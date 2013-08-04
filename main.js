@@ -15,7 +15,7 @@ module.exports = function (config) {
         }
     });
 
-    var appendSelectToDom = function (parentElem, data, select) {
+    var appendOptionsToDom = function (parentElem, data, select) {
         var options = '';
         var length = data.length;
 
@@ -24,7 +24,7 @@ module.exports = function (config) {
         }
 
         if (select) {
-            $(parentElem).append('<select class="span2">' + options + '</select>');
+            $(parentElem).append(options);
         } else {
             $(parentElem).append(options);
         }
@@ -34,7 +34,9 @@ module.exports = function (config) {
         for (key in schema) {
             $(parentElem).after('<div class="control-group">' +
             '<label class="control-label">'+ key +'</label>' +
-            '<div class="controls fields"></div></div>');
+            '<div class="controls fields">' +
+            '<select class="span2" id="' + key + '" name="' + key + '"></select>' +
+            '</div></div>');
         }
     };
 
@@ -49,11 +51,11 @@ module.exports = function (config) {
         if (selected) {
             ios = docs.indexOf(selected);
         } else {
-            appendSelectToDom('#template', docs);
+            appendOptionsToDom('#template', docs);
         };
 
         setFieldsToDom('#containerStage2 form .control-group:first', templates[ios].schema);
-        appendSelectToDom('.fields', data, true);
+        appendOptionsToDom('#containerStage2 form select:not(:first)', data, true);
     };
 
     var loadTemplates = function () {
@@ -75,7 +77,11 @@ module.exports = function (config) {
     };
 
     $('#uploadFrame').load(function () {
-        data = eval($('#uploadFrame').contents().find('body pre').html());
+        try {
+            data = eval($('#uploadFrame').contents().find('body pre').html());
+        } catch (e) {
+            data = $('#uploadFrame').contents().find('body pre').html();
+        }
 
 
         // check if server throwed an error
