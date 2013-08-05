@@ -59,14 +59,7 @@ module.exports = function (config) {
     };
 
     var loadTemplates = function () {
-        var crudObj = {
-            t: '_template',
-            q: {},
-            o: {},
-            f: {}
-        }
-
-        self.emit('find', crudObj, function (error, docs) {
+        self.emit('getTemplates', function (error, docs) {
             if (error) {
                 console.log(error);
                 return;
