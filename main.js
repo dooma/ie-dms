@@ -65,18 +65,14 @@ module.exports = function (config) {
     };
 
     $('#uploadFrame').load(function () {
-        try {
-            data = eval($('#uploadFrame').contents().find('body pre').html());
-        } catch (e) {
-            data = $('#uploadFrame').contents().find('body pre').html();
-        }
-
+        var response = JSON.parse($('#uploadFrame').contents().find('body pre').html());
 
         // check if server throwed an error
-        if (typeof(data) === 'string') {
-            console.log(data);
-        } else if (typeof(data) === 'object') {
+        if (response['error']) {
+            console.log(response['error']);
+        } else if (response['data']) {
             // set array element to each select
+            data = response['data'];
             loadTemplates();
         }
     });
