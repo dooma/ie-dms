@@ -64,22 +64,31 @@ module.exports = function (config) {
         });
     };
 
-    var setFilenameToForm = function (fileName) {
-        $('#containerStage2 form').append('<input type="hidden" value="'
-            + fileName + '" name="file"/>')
+    var setHiddenToForm = function (data) {
+        for (var key in data) {
+            $('#containerStage2 form').append('<input type="hidden" value="'
+                + data[key] + '" name="'+ key +'"/>')
+        }
     };
 
     $('#uploadFrame').load(function () {
         var response = JSON.parse($('#uploadFrame').contents().find('body pre').html());
 
         // check if server throwed an error
+        // TODO: set this announcements to DOM
         if (response['error']) {
             console.log(response['error']);
-        } else if (response['data']) {
+        } else if (response['success']) {
+            console.log(response['success']);
+        }
+        if (response['data']) {
             // set array element to each select
             data = response['data'];
             loadTemplates();
-            setFilenameToForm(response['file']);
+            setHiddenToForm({
+                file: response['file'],
+                header: response['header']
+            });
         }
     });
 

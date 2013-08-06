@@ -14,7 +14,7 @@ exports.import = function (link) {
 
     });
 
-    link.send(200, 'Data received');
+    link.send(200, JSON.stringify({success: 'Data received'}));
 };
 
 exports.uploadImage = function (link) {
@@ -40,7 +40,12 @@ exports.uploadImage = function (link) {
             return;
         }
 
-        link.send(200, JSON.stringify({data: data, file: link.files.csv.path.replace('uploads/', '')}));
+        link.send(200, JSON.stringify({
+                data: data,
+                file: link.files.csv.path.replace('uploads/', ''),
+                header: link.data.headers
+            })
+        );
     });
 };
 
