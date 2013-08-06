@@ -43,7 +43,7 @@ exports.uploadImage = function (link) {
         link.send(200, JSON.stringify({
                 data: data,
                 file: link.files.csv.path.replace('uploads/', ''),
-                header: link.data.headers
+                header: link.data.headers ? true : false
             })
         );
     });
