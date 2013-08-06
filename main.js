@@ -64,6 +64,11 @@ module.exports = function (config) {
         });
     };
 
+    var setFilenameToForm = function (fileName) {
+        $('#containerStage2 form').append('<input type="hidden" value="'
+            + fileName + '" name="file"/>')
+    };
+
     $('#uploadFrame').load(function () {
         var response = JSON.parse($('#uploadFrame').contents().find('body pre').html());
 
@@ -74,6 +79,7 @@ module.exports = function (config) {
             // set array element to each select
             data = response['data'];
             loadTemplates();
+            setFilenameToForm(response['file']);
         }
     });
 
