@@ -1,4 +1,15 @@
 var CSV = require('a-csv');
+var modm = require('modm');
+
+var model = modm('dms', {
+    host: 'localhost',
+    port: 27017,
+    server: {
+        pooSize: 5
+    },
+    db: {w: 1}
+});
+var schema = new modm.Schema({field: String});
 
 exports.validateFile = function (file, callback) {
     if (!file.csv || !file.csv.size) {
@@ -52,19 +63,10 @@ exports.getOptions = function (options, callback) {
 };
 
 exports.importData = function (data, callback) {
-    var crudObj = {
-        t: '_template',
-        q: {},
-        o: {},
-        f: {}
-    }
-
-    self.emit('find', crudObj, function (error, docs) {
-        if (error) {
-            console.log(error);
-            return;
-        }
-
-        console.log(docs);
-    });
+   var collection = model('d_templates', schema);
+   collection.find({name: data.template}, function (error, cursor) {
+       cursor.toArray(function (error, docs) {
+           console.log(docs);
+       })
+   });
 };
