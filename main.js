@@ -17,17 +17,12 @@ module.exports = function (config) {
 
     var appendOptionsToDom = function (parentElem, data, select) {
         var options = '';
-        var length = data.length;
 
-        for (var i = 0, options = ''; i < length; ++i) {
-            options += '<option value="' + data[i] + '">' + data[i] + '</option>';
+        for (var key in data) {
+            options += '<option value="' + data[key] + '">' + data[key] + '</option>';
         }
 
-        if (select) {
-            $(parentElem).append(options);
-        } else {
-            $(parentElem).append(options);
-        }
+        $(parentElem).append(options);
     };
 
     var setFieldsToDom = function (parentElem, schema){
@@ -41,20 +36,20 @@ module.exports = function (config) {
     };
 
     var setTemplateFields = function (docs, selected) {
-        var ios = 0;
         templates = JSON.parse(JSON.stringify(docs));
 
-        for (var i = 0; i < docs.length; ++i) {
-            docs[i] = docs[i].name;
+        for (var key in docs) {
+            docs[key] = docs[key].name;
+            if (docs[key] === selected || typeof(selected) === 'undefined') {
+                selected = key;
+            }
         }
 
-        if (selected) {
-            ios = docs.indexOf(selected);
-        } else {
+        if (docs[selected] === 'Templates') {
             appendOptionsToDom('#template', docs);
         };
 
-        setFieldsToDom('#containerStage2 form .control-group:first', templates[ios].schema);
+        setFieldsToDom('#containerStage2 form .control-group:first', templates[selected].schema);
         appendOptionsToDom('#containerStage2 form select:not(:first)', data, true);
     };
 
