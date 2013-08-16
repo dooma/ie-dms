@@ -1,5 +1,6 @@
 var model = require('./model.js');
 
+// Import file
 exports.import = function (link) {
     if (!link.data) {
         link.send(200, JSON.stringify({error: 'No data sent to me'}));
@@ -17,6 +18,7 @@ exports.import = function (link) {
     link.send(200, JSON.stringify({success: 'Data received'}));
 };
 
+// First file upload that parse first row. TODO: Change operation name to uploadFile
 exports.uploadImage = function (link) {
     model.validateFile(link.files, function (error) {
         if (error) {
@@ -49,6 +51,7 @@ exports.uploadImage = function (link) {
     });
 };
 
+// Export operation
 exports.export = function (link) {
     if (!link.data) {
         link.send(200, JSON.stringify({error: 'No data sent to me'}));

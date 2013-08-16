@@ -4,6 +4,7 @@ module.exports = function (config) {
     var templates;
     var data;
 
+    // Change the state of upload button
     $('#csvUpload').change(function () {
         var fileName = $(this).val().split('.');
         var extension = fileName[fileName.length-1].toLowerCase();
@@ -15,6 +16,7 @@ module.exports = function (config) {
         }
     });
 
+    // Append options to a given select tag
     var appendOptionsToDom = function (parentElem, data, select) {
         var options = '';
 
@@ -25,6 +27,7 @@ module.exports = function (config) {
         $(parentElem).append(options);
     };
 
+    // Append label and select tags after first element which is Templates
     var setFieldsToDom = function (parentElem, schema){
         for (key in schema) {
             $(parentElem).after('<div class="control-group">' +
@@ -35,16 +38,19 @@ module.exports = function (config) {
         }
     };
 
+    // Set template fields to DOM if page is rendered. Otherwise, it does not render templates options again.
     var setTemplateFields = function (docs, selected) {
         templates = JSON.parse(JSON.stringify(docs));
 
         for (var key in docs) {
             docs[key] = docs[key].name;
+            // If page is rendered first time, we do not have an template selected. So we select first template.
             if (docs[key] === selected || typeof(selected) === 'undefined') {
                 selected = key;
             }
         }
 
+        // Append template options to DOM
         if (docs[selected] === 'Templates') {
             appendOptionsToDom('#template', docs);
         };
@@ -53,6 +59,7 @@ module.exports = function (config) {
         appendOptionsToDom('#containerStage2 form select:not(:first)', data, true);
     };
 
+    // Load templates from CRUD module
     var loadTemplates = function () {
         self.emit('getTemplates', function (error, docs) {
             if (error) {
@@ -64,6 +71,7 @@ module.exports = function (config) {
         });
     };
 
+    // Fix hidden fields. This is necessary to make second request to backend module
     var setHiddenToForm = function (data) {
         for (var key in data) {
             $('#containerStage2 form').append('<input type="hidden" value="'
@@ -71,6 +79,7 @@ module.exports = function (config) {
         }
     };
 
+    // Handling response from backend module
     $('#uploadFrame').load(function () {
         var response = JSON.parse($('#uploadFrame').contents().find('body pre').html());
 
@@ -92,6 +101,7 @@ module.exports = function (config) {
         }
     });
 
+    // Rerender files by specified template
     $('#containerStage2 #template').change(function () {
         $('#containerStage2 form .control-group:not(:first)').remove();
 

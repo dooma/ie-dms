@@ -1,6 +1,7 @@
 var CSV = require('a-csv');
 var modm = require('modm');
 
+// Modm model with settings
 var model = modm('dms', {
     host: 'localhost',
     port: 27017,
@@ -11,6 +12,7 @@ var model = modm('dms', {
 });
 var schema = new modm.Schema({field: String});
 
+// Validate uploaded file
 exports.validateFile = function (file, callback) {
     if (!file.csv || !file.csv.size) {
         callback('Invalid file upload!');
@@ -19,6 +21,7 @@ exports.validateFile = function (file, callback) {
     }
 };
 
+// Get first row of the uploaded file. It does not need header parameter to parse CSV.
 exports.getFirstRow = function (file, options, callback) {
     if (typeof(callback) === 'undefined' && typeof(opitons) === 'function') {
         callback = options;
@@ -40,12 +43,13 @@ exports.getFirstRow = function (file, options, callback) {
 
 };
 
+// Parse options selected by user
 exports.getOptions = function (options, callback) {
     if (!options || !options.charset || !options.separator) {
         callback('Invalid options');
         return;
     }
-
+    // tmp object store options
     var tmp = {
         charset: options.charset
     }
@@ -62,6 +66,7 @@ exports.getOptions = function (options, callback) {
     callback(null, tmp);
 };
 
+// Import data operation
 exports.importData = function (data, callback) {
    var collection = model('d_templates', schema);
    collection.find({name: data.template}, function (error, cursor) {
