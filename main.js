@@ -1,8 +1,22 @@
+M.wrap('github/gabipetrovay/ie-dms/dev/main.js', function (require, module, exports) {
 module.exports = function (config) {
 
     var self = this;
-    var templates;
-    var data;
+    self.config = config;
+
+
+    // TODO start a waiter
+
+    self.emit('getTemplates', function(err, data) {
+
+        // TODO show an error
+        if (err) { return; }
+
+        // TODO stop the waiter
+        self.templates = data;
+
+        setOptionsToSelect(document.getElementById('inputTemplate'), self.templates, { value: 'id', name: 'label' });
+    });
 
     // Change the state of upload button
     $('#csvUpload').change(function () {
@@ -16,15 +30,20 @@ module.exports = function (config) {
         }
     });
 
-    // Append options to a given select tag
-    var appendOptionsToDom = function (parentElem, data, select) {
+    // set options to a given select tag
+    function setOptionsToSelect (selectElem, data, keys) {
         var options = '';
-
         for (var key in data) {
-            options += '<option value="' + data[key] + '">' + data[key] + '</option>';
+            // the option name might be with i18n
+            var name = '';
+            if (typeof data[key][keys.name] === 'object') {
+                name = data[key][keys.name][M.getLocale()];
+            } else {
+                name = data[key][keys.name];
+            }
+            options += '<option value="' + data[key][keys.value] + '">' + name + '</option>';
         }
-
-        $(parentElem).append(options);
+        selectElem.innerHTML = options;
     };
 
     // Append label and select tags after first element which is Templates
@@ -110,3 +129,5 @@ module.exports = function (config) {
     });
 
 }
+
+return module; });
