@@ -1,4 +1,3 @@
-M.wrap('github/gabipetrovay/ie-dms/dev/main.js', function (require, module, exports) {
 module.exports = function (config) {
 
     var self = this;
@@ -130,4 +129,3 @@ module.exports = function (config) {
 
 }
 
-return module; });
