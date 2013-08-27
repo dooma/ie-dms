@@ -3,12 +3,13 @@
     "owner": "Jillix",
     "name": "ie-dms",
     "dependencies": [
-        "/main.js",
+        "/ie.js",
+        "/ui.js",
         "http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"
     ],
     "operations": [
+        { "file": "operations.js", "function": "mappings" },
         { "file": "operations.js", "function": "import" },
-        { "file": "operations.js", "function": "uploadImage" },
         { "file": "operations.js", "function": "export" }
     ]
 }

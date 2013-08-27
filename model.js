@@ -22,25 +22,23 @@ exports.validateFile = function (file, callback) {
 };
 
 // Get first row of the uploaded file. It does not need header parameter to parse CSV.
-exports.getFirstRow = function (file, options, callback) {
-    if (typeof(callback) === 'undefined' && typeof(opitons) === 'function') {
+exports.getFirstRow = function (filePath, options, callback) {
+
+    if (typeof opitons === 'function') {
         callback = options;
+        options = {};
     }
 
-    var filePath = M.config.APPLICATION_ROOT + M.config.app.id + '/' + file;
+    var absolutePath = M.config.APPLICATION_ROOT + M.config.app.id + '/' + filePath;
 
-    CSV.parse(filePath, options, function (error, row, next) {
-        if (error) {
-            callback(error);
-            return;
+    CSV.parse(absolutePath, options, function (err, row, next) {
+
+        if (err || !row) {
+            return callback(err || 'Could not read the first row from file: ' + filePath);
         }
 
-        if (row !== null) {
-            callback(null, row);
-            return;
-        }
+        callback(null, row);
     });
-
 };
 
 // Parse options selected by user
