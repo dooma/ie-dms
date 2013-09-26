@@ -134,7 +134,7 @@ function showMappings (path, callback) {
 
     self.$.pages.mapping.find(self.config.ui.selectors.mappingPath).text(path);
 
-    self.link('getColumns', function(err, mappings) {
+    self.link('getColumns', { data: { path: path } }, function(err, mappings) {
 
         // end the waiter
         self.emit('_endWaiting', 'mapping');
@@ -149,7 +149,8 @@ function showMappings (path, callback) {
         // remove all the files
         self.$.fields.empty();
 
-        // TODO
+        // TODO populate the fields from the self.template (set when the template select is changed) and from self.mappings
+        // always reset the fields when a template is changed
     });
 }
 
