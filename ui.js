@@ -21,7 +21,7 @@ module.exports = function () {
     self.config.ui.selectors.mappingPath = self.config.ui.selectors.mappingPath || '.path';
     self.config.ui.selectors.mappingBack = self.config.ui.selectors.mappingBack || '.back';
     self.config.ui.selectors.mappingImport = self.config.ui.selectors.mappingImport || '.import';
-
+    
     // the waiter
     self.$.waiter = $(self.config.ui.selectors.waiter, self.dom);
 
@@ -40,6 +40,10 @@ module.exports = function () {
     // the field container
     self.$.fields = $(self.config.ui.selectors.fields, self.dom);
 
+    $(self.dom).on('click', self.config.ui.selectors.mappingBack, function() {
+        self.emit('reset');
+    });
+
     // configure internal events
     self.on('_startWaiting', startWaiting);
     self.on('_endWaiting', endWaiting);
@@ -48,6 +52,7 @@ module.exports = function () {
 
     // configure external events
     self.on('readInbox', readInbox);
+    self.on('reset', reset);
 
     // ******************************************
 
@@ -174,6 +179,15 @@ function endWaiting (pageId) {
     if (self.$.pages[pageId]) {
         self.$.pages[pageId].show();
     }
+}
+
+function reset () {
+    var self = this;
+
+    self.$.pages['mapping'].hide();
+    self.$.pages['inbox'].show();
+    self.$.fields.empty();
+    
 }
 
 return module; });

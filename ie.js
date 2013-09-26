@@ -15,6 +15,8 @@ module.exports = function (config) {
 
     return;
 
+    self.on('reset', reset);
+
     self.emit('getTemplates', function(err, data) {
 
         // TODO show an error
@@ -86,6 +88,10 @@ module.exports = function (config) {
         appendOptionsToDom('#containerStage2 form select:not(:first)', data, true);
     };
 
+    var reset = function () {
+        //TODO
+    }
+
     // Load templates from CRUD module
     var loadTemplates = function () {
         self.emit('getTemplates', function (error, docs) {
@@ -137,6 +143,5 @@ module.exports = function (config) {
     });
 
 }
-
 
 return module; });
