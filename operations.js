@@ -1,11 +1,37 @@
 var model;
 //var model = require('./model.js');
+var fs = require('fs');
 var modm = require('modm');
 var ObjectId = modm.ObjectId;
 
+var APP_DIR = M.config.APPLICATION_ROOT + M.config.app.id;
+
 // operations
 
+function checkLink (link, mustHaveData) {
+    if (!link.params || !link.params.inboxDir) {
+        link.send(400, 'Missing inboxDir parameter');
+        return false;
+    }
+
+    if (mustHaveData && !link.data) {
+        link.send(400, 'Missing operation data');
+        return false;
+    }
+
+console.log(APP_DIR + '/' + link.params.inboxDir);
+
+    if (!fs.existsSync(APP_DIR + '/' + link.params.inboxDir)) {
+        link.send(400, 'Inbox directory not found: ' + link.params.inboxDir);
+        return false;
+    }
+
+    return true;
+}
+
 exports.import = function (link) {
+
+    if (!checkLink(link, true)) { return; }
 
     if (!link.data) {
         link.send(400, JSON.stringify({ error: 'Missing data' }));
@@ -29,25 +55,37 @@ exports.export = function (link) {
 exports.readInbox = function (link) {
 setTimeout(function() {
 
-    var files = [
-        { path: '/this/is/a/path1.csv'},
-        { path: '/this/is/a/path2.csv'},
-        { path: '/this/is/a/path3.csv'},
-        { path: '/this/is/a/path4.csv'},
-        { path: '/this/is/a/path5.csv'}
-    ];
+    if (!checkLink(link)) { return; }
 
-    link.send(200, files);
+    fs.readdir(APP_DIR + '/' + link.params.inboxDir, function(err, files) {
+
+        var inboxFiles = [];
+
+        for (var i in files) {
+            // do not return hidden files
+            if (files[i][0] === '.') {
+                continue;
+            }
+            inboxFiles.push({ path: files[i] });
+        }
+
+        link.send(200, inboxFiles);
+    });
 
 }, 2000);
 };
 
 exports.deleteFile = function (link) {
-    console.dir(link.data);
+
+    if (!checkLink(link, true)) { return; }
+
     link.send(200, 'ok');
 };
 
 exports.getColumns = function (link) {
+
+    if (!checkLink(link, true)) { return; }
+
     link.send(200, 'ok');
 };
 
