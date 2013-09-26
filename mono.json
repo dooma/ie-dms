@@ -8,7 +8,9 @@
         "http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"
     ],
     "operations": [
-        { "file": "operations.js", "function": "mappings" },
+        { "file": "operations.js", "function": "readInbox" },
+        { "file": "operations.js", "function": "deleteFile" },
+        { "file": "operations.js", "function": "getColumns" },
         { "file": "operations.js", "function": "import" },
         { "file": "operations.js", "function": "export" }
     ]

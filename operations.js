@@ -22,51 +22,25 @@ exports.import = function (link) {
 };
 
 exports.export = function (link) {
-
-    if (!link.data) {
-        link.send(400, JSON.stringify({ error: 'Missing data' }));
-        return;
-    }
+    link.send(200, 'OK');
 };
 
-exports.mappings = function () {
+exports.readInbox = function (link) {
 
-    if (!link.data) {
-        link.send(400, JSON.stringify({ error: 'Missing data' }));
-        return;
-    }
+    var files = [
+        { path: '/this/is/a/path1.csv'},
+        { path: '/this/is/a/path2.csv'}
+    ];
 
-    if (!link.data.upload) {
-        link.send(400, JSON.stringify({ error: 'Missing upload id' }));
-        return;
-    }
+    link.send(200, files);
+};
 
-    getUpload(link, function(err, upload) {
+exports.deleteFile = function (link) {
+    link.send(200, 'ok');
+};
 
-        if (err) {
-            link.send(400, err);
-            return;
-        }
-
-        model.getFirstRow(upload.file, function(err, row) {
-
-            if (err) {
-                link.send(500, error);
-                return;
-            }
-
-console.dir(row);
-
-            var sampleMappings = {
-                'col1': [0, 'First'],
-                'col2': [2, 'Third'],
-                'col3': [1, 'Second'],
-                'col4': [3]
-            };
-
-            link.send(200, sampleMappings);
-        });
-    });
+exports.getColumns = function (link) {
+    link.send(200, 'ok');
 };
 
 // internal functions

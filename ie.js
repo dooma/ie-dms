@@ -1,10 +1,19 @@
+M.wrap('github/gabipetrovay/ie-dms/dev/ie.js', function (require, module, exports) {
+
+var ui = require('./ui');
+
 module.exports = function (config) {
 
     var self = this;
     self.config = config;
+    self.inbox = [];
+    self.$ = {};
 
+    if (self.config.ui) {
+        ui.call(self);
+    }
 
-    // TODO start a waiter
+    return;
 
     self.emit('getTemplates', function(err, data) {
 
@@ -129,3 +138,5 @@ module.exports = function (config) {
 
 }
 
+
+return module; });
