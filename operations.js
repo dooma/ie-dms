@@ -1,4 +1,5 @@
-var model = require('./model.js');
+var model;
+//var model = require('./model.js');
 var modm = require('modm');
 var ObjectId = modm.ObjectId;
 
@@ -26,16 +27,23 @@ exports.export = function (link) {
 };
 
 exports.readInbox = function (link) {
+setTimeout(function() {
 
     var files = [
         { path: '/this/is/a/path1.csv'},
-        { path: '/this/is/a/path2.csv'}
+        { path: '/this/is/a/path2.csv'},
+        { path: '/this/is/a/path3.csv'},
+        { path: '/this/is/a/path4.csv'},
+        { path: '/this/is/a/path5.csv'}
     ];
 
     link.send(200, files);
+
+}, 2000);
 };
 
 exports.deleteFile = function (link) {
+    console.dir(link.data);
     link.send(200, 'ok');
 };
 
