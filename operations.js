@@ -3,6 +3,8 @@ var model;
 var fs = require('fs');
 var modm = require('modm');
 var ObjectId = modm.ObjectId;
+var Charset = require("jschardet");
+var CSV = require("a-csv");
 
 var APP_DIR = M.config.APPLICATION_ROOT + M.config.app.id;
 
@@ -89,23 +91,63 @@ setTimeout(function() {
 console.dir(link.data);
     if (!checkLink(link, true)) { return; }
 
-    // TODO input data:
-    // s = separator (default ,)
-    // c = charset (default utf-8)
-    // l = lines (default 5)
-    // path = file in inbox to read from
+    // the file path from inbox directory
+    var path = APP_DIR + '/' + link.params.inboxDir + '/' + link.data.path;
 
-    var mappings = {
-        // TODO read the first l lines in the file given in link.data.path
-        columns: [['Start', 'End', 'Title'], ['2013-12-20', '2013-12-30', 'Christmas Campaign'], ['2014-03-01', '2014-04-10', 'End-of-Winter Aktion']],
-        separator: ',',
-        charset: 'utf-8'
-    };
 
-    link.send(200, mappings);
+    // get the lines from file
+    fs.readFile(path, function (err, fileContent) {
+        if (err) { return link.send(400, err); }
 
-}, 2000);
+        fileContent = fileContent.toString();
+
+        var l = link.data.l || 10;
+        var linesCount = fileContent.split("\n").length;
+
+        if (l > linesCount) {
+            l = linesCount;
+        }
+
+        var s = getCSVSeparator(fileContent);
+        var c = Charset.detect(fileContent).encoding;
+
+        var options = {
+            delimiter: s,
+            charset: c
+        };
+
+        var i = 0;
+        var lines = [];
+        CSV.parse(path, options, function (err, row, next) {
+
+            if (err) { return link.send(400, err); }
+
+            lines.push(row);
+            if (++i < l) {
+                next();
+            }
+            else {
+                var mappings = {
+                    lines: lines,
+                    separator: s,
+                    charset: c
+                };
+
+                link.send(200, mappings);
+            }
+        });
+
+    });
+
+}, 500);
 };
+
+// get csv separator
+function getCSVSeparator (lines) {
+    // TODO
+    var detectedSeparator;
+    return detectedSeparator || ",";
+}
 
 // internal functions
 
