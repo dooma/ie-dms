@@ -49,6 +49,7 @@ module.exports = function () {
     self.on('_endWaiting', endWaiting);
     self.on('_deleteFile', deleteFile);
     self.on('_showMappings', showMappings);
+    self.on('_setTemplates', setTemplates);
 
     // configure external events
     self.on('readInbox', readInbox);
@@ -119,6 +120,21 @@ function appendFile (file) {
     });
     // add the new file to the dom
     self.$.files.append($file);
+}
+
+function setTemplates () {
+    var self = this;
+
+    var selectElem = self.config.ui.selectors.template;
+    var options = '';
+    for(var key in self.templates) {
+        if (!self.templates.hasOwnProperty(key)) return;
+        var value = self.templates[key]._id;
+        var name = self.templates[key].options.label[M.getLocale()];
+        options += '<option value="' + value + '">' + name + '</option>'; 
+    }
+
+    $(selectElem).html(options);
 }
 
 function deleteFile (path, callback) {
