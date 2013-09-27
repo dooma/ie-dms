@@ -9,8 +9,47 @@ module.exports = function (config) {
     self.inbox = [];
     self.$ = {};
 
+    getTemplates.call(self);
+
     if (self.config.ui) {
         ui.call(self);
+    }
+
+    function getTemplates () {
+
+        var query = {};
+        var options = {};
+        var fields = {
+            options: 1,
+            _id: 1,
+            uploads: 1
+        };
+        var filter = {
+            _id: { $nin: ["000000000000000000000004"] }
+        }
+
+        var crudObj = {
+            t: '000000000000000000000000',
+            q: query,
+            o: options,
+            f: fields
+        };
+
+        for (var key in filter) {
+            if (!filter.hasOwnProperty(key)) return;
+            crudObj.q[key] = filter[key];
+        }
+
+        self.emit("find", crudObj, function(err, data) {
+            
+            if (err) {
+                console.error(err);
+                return;
+            }
+
+            self.templates = data;
+            self.emit("_setTemplates");
+        });
     }
 
     return;
@@ -24,7 +63,7 @@ module.exports = function (config) {
 
         // TODO stop the waiter
         self.templates = data;
-
+        console.log('data')
         setOptionsToSelect(document.getElementById('inputTemplate'), self.templates, { value: 'id', name: 'label' });
     });
 
