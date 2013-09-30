@@ -129,22 +129,6 @@ module.exports = function (config) {
         appendOptionsToDom('#containerStage2 form select:not(:first)', data, true);
     };
 
-    var reset = function () {
-        //TODO
-    }
-
-    // Load templates from CRUD module
-    var loadTemplates = function () {
-        self.emit('getTemplates', function (error, docs) {
-            if (error) {
-                console.log(error);
-                return;
-            }
-
-            setTemplateFields(docs);
-        });
-    };
-
     // Fix hidden fields. This is necessary to make second request to backend module
     // var setHiddenToForm = function (data) {
     //     for (var key in data) {
