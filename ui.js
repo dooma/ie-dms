@@ -21,6 +21,7 @@ module.exports = function () {
     self.config.ui.selectors.mappingPath = self.config.ui.selectors.mappingPath || '.path';
     self.config.ui.selectors.mappingBack = self.config.ui.selectors.mappingBack || '.back';
     self.config.ui.selectors.mappingImport = self.config.ui.selectors.mappingImport || '.import';
+    self.config.ui.selectors.mappingTable = self.config.ui.selectors.mappingTable || '.mappingTable';
 
     // the waiter
     self.$.waiter = $(self.config.ui.selectors.waiter, self.dom);
@@ -54,6 +55,7 @@ module.exports = function () {
     self.on('_deleteFile', deleteFile);
     self.on('_showMappings', showMappings);
     self.on('_setTemplates', setTemplates);
+    self.on('_renderTable', renderTable);
 
     // configure external events
     self.on('readInbox', readInbox);
@@ -108,6 +110,7 @@ function templateChangeHandler () {
     $(self.dom).off('change');
     $(self.dom).on('change', self.config.ui.selectors.template, function () {
         setTemplateFields.call(self, getSelectedTemplate.call(self, ($(this).val())));
+        self.emit('_renderTable');
     });
 }
 
@@ -269,6 +272,7 @@ function showMappings (path, callback) {
         }
 
         self.mappings = mappings;
+        self.emit("_renderTable");
 
         // remove all the files
         self.$.fields.empty();
@@ -276,6 +280,40 @@ function showMappings (path, callback) {
         // fake change event for template select
         self.$.select.change();
     });
+}
+
+function renderTable () {
+    var self = this;
+    //clear the table
+    $(self.config.ui.selectors.mappingTable).html('');
+
+    if (self.mappings) {
+        //get the table data
+        var lines = self.mappings.lines;
+
+        var body = '<tbody>';
+        for (var i = 0; i < lines.length; ++i) {
+            if (lines[i]) {
+                if (i == 0) {
+                    var header = '<thead><tr>';
+                    for (var field = 0; field < lines[i].length; ++field) {
+                        header += '<th>' + lines[i][field] + '</th>';
+                    }
+                    header += '</tr></thead>';
+                } else {
+                    body += '<tr>';
+                    for (var field = 0; field < lines[i].length; ++field) {
+                        body += '<td>' + lines[i][field] + '</td>';
+                    }
+                    body += '</tr>';
+                }
+            }
+        }
+
+        //append data to table
+        $(self.config.ui.selectors.mappingTable).append(header);
+        $(self.config.ui.selectors.mappingTable).append(body);
+    }
 }
 
 function startWaiting () {
