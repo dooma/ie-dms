@@ -40,6 +40,10 @@ module.exports = function () {
     // the field container
     self.$.fields = $(self.config.ui.selectors.fields, self.dom);
 
+
+    // the template select
+    self.$.select = $(self.config.ui.selectors.template, self.dom);
+
     $(self.dom).on('click', self.config.ui.selectors.mappingBack, function() {
         self.emit('reset');
     });
@@ -63,6 +67,7 @@ module.exports = function () {
     // add change handler for template select
     templateChangeHandler.call(self);
 }
+
 
 function readInbox () {
     var self = this;
@@ -102,9 +107,99 @@ function templateChangeHandler () {
 
     $(self.dom).off('change');
     $(self.dom).on('change', self.config.ui.selectors.template, function () {
-        debugger;
+        setTemplateFields.call(self, getSelectedTemplate.call(self, ($(this).val())));
     });
 }
+
+function getSelectedTemplate (templId) {
+
+    var self = this;
+
+    for (var i = 0; i < self.templates.length; ++i) {
+        var cTemplate = self.templates[i];
+        if (cTemplate._id === templId) {
+            return cTemplate;
+        }
+    }
+
+    return undefined;
+}
+
+// Set template fields to DOM if page is rendered. Otherwise, it does not render templates options again.
+function setTemplateFields (selected) {
+
+    var self = this;
+
+    selected = JSON.parse(JSON.stringify(selected));
+
+    var schema = selected.schema;
+
+    // TODO Move to config
+    var template    = ".field-template",
+        name        = ".field-name",
+        fieldSelect = ".field-select";
+
+    // set template
+    var $template = $(template, self.dom);
+    var $fieldsToAdd = [];
+
+    // empty the fields
+    self.$.fields.empty();
+
+    var orderedFields = [];
+    for (var key in schema) {
+        var obj = schema[key];
+        obj.keyName = key;
+
+        orderedFields.push(obj);
+    }
+
+    orderedFields.sort(function(f1, f2) {
+        if (f1.order < f2.order) {
+            return -1;
+        } else {
+            return 1;
+        }
+    });
+
+    // add the fields
+    for (var field = 0; field < orderedFields.length; ++field) {
+
+        // clone template
+        var $field = $template.clone().removeClass(template.substring(1));
+
+        // set the label
+        $field.find(name).text(
+            (orderedFields[field].label || {})[M.getLocale()] ||
+            orderedFields[field].keyName
+        );
+
+        // add options
+        // TODO Is mappings in the correct format?
+        //      I think server should validate csv file and send always a correct
+        //      response
+        var $options = [];
+        var options = self.mappings.lines[0];
+        for (var i = 0; i < options.length; ++i) {
+            var $option = $("<option>");
+            $option.attr("value", options[i]);
+            // TODO i18n
+            $option.text("Collumn " + i + " (" + options[i] + ")");
+            $options.push($option);
+        }
+
+        // append options
+        $(fieldSelect, $field).append($options);
+
+        // push field into array
+        $fieldsToAdd.push($field);
+    }
+
+    // reorder the fields
+
+    // append all fields
+    self.$.fields.append($fieldsToAdd);
+};
 
 function appendFile (file) {
     var self = this;
@@ -178,8 +273,8 @@ function showMappings (path, callback) {
         // remove all the files
         self.$.fields.empty();
 
-        // TODO populate the fields from the self.template (set when the template select is changed) and from self.mappings
-        // always reset the fields when a template is changed
+        // fake change event for template select
+        self.$.select.change();
     });
 }
 

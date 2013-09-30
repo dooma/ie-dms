@@ -57,8 +57,6 @@ module.exports = function (config) {
         });
     }
 
-
-
     // self.emit('getTemplates', function(err, data) {
 
     //     // TODO show an error
@@ -99,38 +97,6 @@ module.exports = function (config) {
     //     $(selectElem).html($options.html());
     // };
 
-    // Append label and select tags after first element which is Templates
-    var setFieldsToDom = function (parentElem, schema){
-        for (key in schema) {
-            // TODO Template in html side?
-            $(parentElem).after('<div class="control-group">' +
-            '<label class="control-label">'+ key +'</label>' +
-            '<div class="controls fields">' +
-            '<select class="span2" id="' + key + '" name="' + key + '"></select>' +
-            '</div></div>');
-        }
-    };
-
-    // Set template fields to DOM if page is rendered. Otherwise, it does not render templates options again.
-    var setTemplateFields = function (docs, selected) {
-        templates = JSON.parse(JSON.stringify(docs));
-
-        for (var key in docs) {
-            docs[key] = docs[key].name;
-            // If page is rendered first time, we do not have an template selected. So we select first template.
-            if (docs[key] === selected || typeof(selected) === 'undefined') {
-                selected = key;
-            }
-        }
-
-        // Append template options to DOM
-        if (docs[selected] === 'Templates') {
-            appendOptionsToDom('#template', docs);
-        };
-
-        setFieldsToDom('#containerStage2 form .control-group:first', templates[selected].schema);
-        appendOptionsToDom('#containerStage2 form select:not(:first)', data, true);
-    };
 
     // Fix hidden fields. This is necessary to make second request to backend module
     // var setHiddenToForm = function (data) {
