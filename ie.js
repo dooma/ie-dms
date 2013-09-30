@@ -13,6 +13,10 @@ module.exports = function (config) {
 
     if (self.config.ui) {
         ui.call(self);
+    } else {
+        self.on('reset', function () {
+            // TODO
+        });
     }
 
     function getTemplates () {
@@ -54,7 +58,6 @@ module.exports = function (config) {
     }
 
 
-    self.on('reset', reset);
 
     // self.emit('getTemplates', function(err, data) {
 
