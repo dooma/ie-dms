@@ -59,6 +59,9 @@ module.exports = function () {
 
     // read the inbox
     self.emit('readInbox');
+
+    // add change handler for template select
+    templateChangeHandler.call(self);
 }
 
 function readInbox () {
@@ -95,6 +98,9 @@ function readInbox () {
 }
 
 function templateChangeHandler () {
+    var self = this;
+
+    $(self.dom).off('change');
     $(self.dom).on('change', self.config.ui.selectors.template, function () {
         debugger;
     });
