@@ -22,7 +22,8 @@ module.exports = function (config) {
         var fields = {
             options: 1,
             _id: 1,
-            uploads: 1
+            uploads: 1,
+            schema: 1
         };
         var filter = {
             _id: { $nin: ["000000000000000000000004"] }
@@ -41,7 +42,7 @@ module.exports = function (config) {
         }
 
         self.emit("find", crudObj, function(err, data) {
-            
+
             if (err) {
                 console.error(err);
                 return;
@@ -81,7 +82,7 @@ module.exports = function (config) {
 
     // set options to a given select tag
     function setOptionsToSelect (selectElem, data, keys) {
-        var options = '';
+        var $options = $("<div>");
         for (var key in data) {
             // the option name might be with i18n
             var name = '';
@@ -90,14 +91,16 @@ module.exports = function (config) {
             } else {
                 name = data[key][keys.name];
             }
-            options += '<option value="' + data[key][keys.value] + '">' + name + '</option>';
+            var $option = $("<option>").attr("value", data[key][keys.value]).text(name);
+            $options.append($option);;
         }
-        selectElem.innerHTML = options;
+        $(selectElem).html($options.html());
     };
 
     // Append label and select tags after first element which is Templates
     var setFieldsToDom = function (parentElem, schema){
         for (key in schema) {
+            // TODO Template in html side?
             $(parentElem).after('<div class="control-group">' +
             '<label class="control-label">'+ key +'</label>' +
             '<div class="controls fields">' +

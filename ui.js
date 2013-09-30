@@ -21,7 +21,7 @@ module.exports = function () {
     self.config.ui.selectors.mappingPath = self.config.ui.selectors.mappingPath || '.path';
     self.config.ui.selectors.mappingBack = self.config.ui.selectors.mappingBack || '.back';
     self.config.ui.selectors.mappingImport = self.config.ui.selectors.mappingImport || '.import';
-    
+
     // the waiter
     self.$.waiter = $(self.config.ui.selectors.waiter, self.dom);
 
@@ -94,6 +94,12 @@ function readInbox () {
     });
 }
 
+function templateChangeHandler () {
+    $(self.dom).on('change', self.config.ui.selectors.template, function () {
+        debugger;
+    });
+}
+
 function appendFile (file) {
     var self = this;
 
@@ -126,15 +132,16 @@ function setTemplates () {
     var self = this;
 
     var selectElem = self.config.ui.selectors.template;
-    var options = '';
+    var $options = $("<div>");
     for(var key in self.templates) {
         if (!self.templates.hasOwnProperty(key)) return;
         var value = self.templates[key]._id;
         var name = self.templates[key].options.label[M.getLocale()];
-        options += '<option value="' + value + '">' + name + '</option>'; 
+        var $option = $("<option>").attr("value", value).text(name);
+        $options.append($option);
     }
 
-    $(selectElem).html(options);
+    $(selectElem).html($options.html());
 }
 
 function deleteFile (path, callback) {
@@ -204,7 +211,7 @@ function reset () {
     self.$.pages['mapping'].hide();
     self.$.pages['inbox'].show();
     self.$.fields.empty();
-    
+
 }
 
 return module; });

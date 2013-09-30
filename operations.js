@@ -74,7 +74,7 @@ setTimeout(function() {
         link.send(200, inboxFiles);
     });
 
-}, 2000);
+}, 500);
 };
 
 exports.deleteFile = function (link) {
@@ -82,15 +82,15 @@ exports.deleteFile = function (link) {
     if (!checkLink(link, true)) { return; }
 
     //console.log(">>> " + link.data);
-    
+
     var path = link.data;
-    
+
     if (!path) { return; }
-    
+
     //process path
     var modifiedPath = path.replace(/\.\.\//g, "");
     modifiedPath = modifiedPath.replace(/\.\//g, "");
-    
+
     fs.unlink(APP_DIR + '/' + link.params.inboxDir + "/" + modifiedPath, function (err) {
         if (err) {
             link.send(400, "Bad Request");
