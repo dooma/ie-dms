@@ -44,9 +44,6 @@ module.exports = function () {
     $(self.dom).on('click', self.config.ui.selectors.mappingBack, function() {
         self.emit('reset');
     });
-    $(self.config.ui.selectors.template).change(function () {
-        self.emit('_renderTable');
-    });
 
     // configure internal events
     self.on('_startWaiting', startWaiting);
@@ -64,6 +61,9 @@ module.exports = function () {
 
     // read the inbox
     self.emit('readInbox');
+
+    // add change handler for template select
+    templateChangeHandler.call(self);
 }
 
 function readInbox () {
@@ -99,6 +99,15 @@ function readInbox () {
     });
 }
 
+function templateChangeHandler () {
+    var self = this;
+
+    $(self.dom).off('change');
+    $(self.dom).on('change', self.config.ui.selectors.template, function () {
+        self.emit('_renderTable');
+    });
+}
+
 function appendFile (file) {
     var self = this;
 
@@ -131,15 +140,16 @@ function setTemplates () {
     var self = this;
 
     var selectElem = self.config.ui.selectors.template;
-    var options = '';
+    var $options = $("<div>");
     for(var key in self.templates) {
         if (!self.templates.hasOwnProperty(key)) return;
         var value = self.templates[key]._id;
         var name = self.templates[key].options.label[M.getLocale()];
-        options += '<option value="' + value + '">' + name + '</option>'; 
+        var $option = $("<option>").attr("value", value).text(name);
+        $options.append($option);
     }
 
-    $(selectElem).html(options);
+    $(selectElem).html($options.html());
 }
 
 function deleteFile (path, callback) {
@@ -178,29 +188,36 @@ function showMappings (path, callback) {
 
 function renderTable () {
     var self = this;
-
+    //clear the table
     $(self.config.ui.selectors.mappingTable).html('');
-    var columns = self.mappings.columns;
 
-    var body = '<tbody>';
-    for (var i = 0; i < columns.length; ++i) {
-        if (i == 0) {
-            var header = '<thead><tr>';
-            for (var field = 0; field < columns[i].length; ++field) {
-                header += '<th>' + columns[i][field] + '</th>';
+    if (self.mappings) {
+        //get the table data
+        var lines = self.mappings.lines;
+
+        var body = '<tbody>';
+        for (var i = 0; i < lines.length; ++i) {
+            if (lines[i]) {
+                if (i == 0) {
+                    var header = '<thead><tr>';
+                    for (var field = 0; field < lines[i].length; ++field) {
+                        header += '<th>' + lines[i][field] + '</th>';
+                    }
+                    header += '</tr></thead>';
+                } else {
+                    body += '<tr>';
+                    for (var field = 0; field < lines[i].length; ++field) {
+                        body += '<td>' + lines[i][field] + '</td>';
+                    }
+                    body += '</tr>';
+                }
             }
-            header += '</tr></thead>';
-        } else {
-            body += '<tr>';
-            for (var field = 0; field < columns[i].length; ++field) {
-                body += '<td>' + columns[i][field] + '</td>';
-            }
-            body += '</tr>';
         }
-    }
 
-    $(self.config.ui.selectors.mappingTable).append(header);
-    $(self.config.ui.selectors.mappingTable).append(body);
+        //append data to table
+        $(self.config.ui.selectors.mappingTable).append(header);
+        $(self.config.ui.selectors.mappingTable).append(body);
+    }
 }
 
 function startWaiting () {
@@ -237,7 +254,7 @@ function reset () {
     self.$.pages['mapping'].hide();
     self.$.pages['inbox'].show();
     self.$.fields.empty();
-    
+
 }
 
 return module; });
