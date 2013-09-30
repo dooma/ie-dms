@@ -21,6 +21,7 @@ module.exports = function () {
     self.config.ui.selectors.mappingPath = self.config.ui.selectors.mappingPath || '.path';
     self.config.ui.selectors.mappingBack = self.config.ui.selectors.mappingBack || '.back';
     self.config.ui.selectors.mappingImport = self.config.ui.selectors.mappingImport || '.import';
+    self.config.ui.selectors.mappingTable = self.config.ui.selectors.mappingTable || '.mappingTable';
     
     // the waiter
     self.$.waiter = $(self.config.ui.selectors.waiter, self.dom);
@@ -43,6 +44,9 @@ module.exports = function () {
     $(self.dom).on('click', self.config.ui.selectors.mappingBack, function() {
         self.emit('reset');
     });
+    $(self.config.ui.selectors.template).change(function () {
+        self.emit('_renderTable');
+    });
 
     // configure internal events
     self.on('_startWaiting', startWaiting);
@@ -50,6 +54,7 @@ module.exports = function () {
     self.on('_deleteFile', deleteFile);
     self.on('_showMappings', showMappings);
     self.on('_setTemplates', setTemplates);
+    self.on('_renderTable', renderTable);
 
     // configure external events
     self.on('readInbox', readInbox);
@@ -161,6 +166,7 @@ function showMappings (path, callback) {
         }
 
         self.mappings = mappings;
+        self.emit("_renderTable");
 
         // remove all the files
         self.$.fields.empty();
@@ -168,6 +174,33 @@ function showMappings (path, callback) {
         // TODO populate the fields from the self.template (set when the template select is changed) and from self.mappings
         // always reset the fields when a template is changed
     });
+}
+
+function renderTable () {
+    var self = this;
+
+    $(self.config.ui.selectors.mappingTable).html('');
+    var columns = self.mappings.columns;
+
+    var body = '<tbody>';
+    for (var i = 0; i < columns.length; ++i) {
+        if (i == 0) {
+            var header = '<thead><tr>';
+            for (var field = 0; field < columns[i].length; ++field) {
+                header += '<th>' + columns[i][field] + '</th>';
+            }
+            header += '</tr></thead>';
+        } else {
+            body += '<tr>';
+            for (var field = 0; field < columns[i].length; ++field) {
+                body += '<td>' + columns[i][field] + '</td>';
+            }
+            body += '</tr>';
+        }
+    }
+
+    $(self.config.ui.selectors.mappingTable).append(header);
+    $(self.config.ui.selectors.mappingTable).append(body);
 }
 
 function startWaiting () {
