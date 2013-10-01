@@ -259,7 +259,12 @@ function showMappings (path, callback) {
     // start a waiter
     self.emit('_startWaiting');
 
-    self.$.pages.mapping.find(self.config.ui.selectors.mappingPath).text(path);
+    var $pathLabel = self.$.pages.mapping.find(self.config.ui.selectors.mappingPath);
+    if ($pathLabel.prop('tagName') === 'INPUT') {
+        $pathLabel.val(path);
+    } else {
+        $pathLabel.text(path);
+    }
 
     self.link('getColumns', { data: { path: path } }, function(err, mappings) {
 
