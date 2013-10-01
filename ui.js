@@ -133,9 +133,16 @@ function setTemplateFields (selected) {
 
     var self = this;
 
-    selected = JSON.parse(JSON.stringify(selected));
+    if (!selected) {
+        // empty the fields
+        self.$.fields.empty();
+        // delete the saved template
+        delete self.template;
+        return;
+    }
 
-    var schema = selected.schema;
+    self.template = JSON.parse(JSON.stringify(selected));
+    var schema = self.template.schema;
 
     // TODO Move to config
     var template    = ".field-template",
@@ -145,9 +152,6 @@ function setTemplateFields (selected) {
     // set template
     var $template = $(template, self.dom);
     var $fieldsToAdd = [];
-
-    // empty the fields
-    self.$.fields.empty();
 
     var orderedFields = [];
     for (var key in schema) {
