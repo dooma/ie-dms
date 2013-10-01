@@ -149,8 +149,7 @@ function setTemplateFields (selected) {
     var schema = self.template.schema;
 
     // TODO Move to config
-    var template    = ".field-template",
-        name        = ".field-name",
+    var name        = ".field-name",
         fieldSelect = ".field-select";
 
     // set template
@@ -199,7 +198,6 @@ function setTemplateFields (selected) {
         for (var i = 0; i < options.length; ++i) {
             var $option = $("<option>");
             $option.attr("value", options[i]);
-            // TODO i18n
             $option.text("Column " + (i + 1) + " (" + options[i] + ")");
             $options.push($option);
         }
