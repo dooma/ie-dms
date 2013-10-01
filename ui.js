@@ -237,15 +237,17 @@ function setTemplates () {
 
     var selectElem = self.config.ui.selectors.template;
     var $options = $("<div>");
-    for(var key in self.templates) {
+
+    for (var key in self.templates) {
         if (!self.templates.hasOwnProperty(key)) return;
+
         var value = self.templates[key]._id;
         var name = self.templates[key].options.label[M.getLocale()];
         var $option = $("<option>").attr("value", value).text(name);
         $options.append($option);
     }
 
-    $(selectElem).html($options.html());
+    $(selectElem).append($options.children());
 }
 
 function deleteFile (path, callback) {
