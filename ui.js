@@ -183,11 +183,12 @@ function setTemplateFields (selected) {
         //      response
         var $options = [];
         var options = self.mappings.lines[0];
+
         for (var i = 0; i < options.length; ++i) {
             var $option = $("<option>");
             $option.attr("value", options[i]);
             // TODO i18n
-            $option.text("Collumn " + i + " (" + options[i] + ")");
+            $option.text("Collumn " + (i + 1) + " (" + options[i] + ")");
             $options.push($option);
         }
 
@@ -276,9 +277,6 @@ function showMappings (path, callback) {
 
         // remove all the files
         self.$.fields.empty();
-
-        // fake change event for template select
-        self.$.select.change();
     });
 }
 
