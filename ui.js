@@ -149,7 +149,8 @@ function setTemplateFields (selected) {
     var schema = self.template.schema;
 
     // TODO Move to config
-    var name        = ".field-name",
+    var template    = ".field-template",
+        name        = ".field-name",
         fieldSelect = ".field-select";
 
     // set template
