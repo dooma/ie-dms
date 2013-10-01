@@ -202,7 +202,7 @@ function setTemplateFields (selected) {
             var $option = $('<option>');
             $option.attr('value', options[i]);
             // TODO i18n
-            $option.text('Column ' + (i + 1) + ' (' + options[i] + ')');
+            $option.text('Column ' + (i + 1) + (options[i] ? ' (' + options[i] + ')' : ''));
             $options.push($option);
         }
 
