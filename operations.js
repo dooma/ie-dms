@@ -158,10 +158,29 @@ console.dir(link.data);
 };
 
 // get csv separator
-function getCSVSeparator (lines) {
-    // TODO
-    var detectedSeparator;
-    return detectedSeparator || ",";
+// TODO Handle quoted fields
+function getCSVSeparator (text) {
+
+    var possibleDelimiters = [";", ",", "\t"];
+
+    return possibleDelimiters.filter(weedOut);
+
+    function weedOut (delimiter) {
+        var cache = -1;
+        return text.split('\n').every(checkLength);
+
+        function checkLength (line) {
+            if (!line) {
+                return true;
+            }
+
+            var length = line.split(delimiter).length;
+            if (cache < 0) {
+                cache = length;
+            }
+            return cache === length && length > 1;
+        }
+    }
 }
 
 // internal functions
