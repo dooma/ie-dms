@@ -188,11 +188,16 @@ function setTemplateFields (selected) {
         var $options = [];
         var options = self.mappings.lines[0];
 
+        var $option = $("<option>");
+        $option.attr("value", "");
+        $option.text("--- Select column ---");
+        $options.push($option);
+
         for (var i = 0; i < options.length; ++i) {
             var $option = $("<option>");
             $option.attr("value", options[i]);
             // TODO i18n
-            $option.text("Collumn " + (i + 1) + " (" + options[i] + ")");
+            $option.text("Column " + (i + 1) + " (" + options[i] + ")");
             $options.push($option);
         }
 
@@ -242,6 +247,11 @@ function setTemplates () {
 
     var selectElem = self.config.ui.selectors.template;
     var $options = $("<div>");
+
+    var $option = $("<option>");
+    $option.attr("value", "");
+    $option.text("--- Select template ---");
+    $options.append($option);
 
     for (var key in self.templates) {
         if (!self.templates.hasOwnProperty(key)) return;
