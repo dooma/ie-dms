@@ -42,7 +42,7 @@ module.exports = function () {
     self.$.fields = $(self.config.ui.selectors.fields, self.dom);
 
     // field template
-    self.$.fieldTemplate = $(".field-template", self.dom);
+    self.$.fieldTemplate = $('.field-template', self.dom);
 
     // the template select
     self.$.select = $(self.config.ui.selectors.template, self.dom);
@@ -141,7 +141,7 @@ function setTemplateFields (selected) {
         // delete the saved template
         delete self.template;
         // hide mapping fields
-        $(".mapping-fields").hide();
+        $('.mapping-fields').hide();
         return;
     }
 
@@ -149,16 +149,16 @@ function setTemplateFields (selected) {
     var schema = self.template.schema;
 
     // TODO Move to config
-    var template    = ".field-template",
-        name        = ".field-name",
-        fieldSelect = ".field-select";
+    var template    = '.field-template',
+        name        = '.field-name',
+        fieldSelect = '.field-select';
 
     // set template
     var $template = self.$.fieldTemplate;
     var $fieldsToAdd = [];
 
     // show mapping fields
-    $(".mapping-fields").show();
+    $('.mapping-fields').show();
 
     // reorder the fields
     var orderedFields = [];
@@ -196,13 +196,13 @@ function setTemplateFields (selected) {
         var $options = [];
         var options = self.mappings.lines[0];
 
-        var $option = $("<option>");
+        var $option = $('<option>');
 
         for (var i = 0; i < options.length; ++i) {
-            var $option = $("<option>");
-            $option.attr("value", options[i]);
+            var $option = $('<option>');
+            $option.attr('value', options[i]);
             // TODO i18n
-            $option.text("Column " + (i + 1) + " (" + options[i] + ")");
+            $option.text('Column ' + (i + 1) + ' (' + options[i] + ')');
             $options.push($option);
         }
 
@@ -251,16 +251,16 @@ function setTemplates () {
     var self = this;
 
     var selectElem = self.config.ui.selectors.template;
-    var $options = $("<div>");
+    var $options = $('<div>');
 
-    var $option = $("<option>");
+    var $option = $('<option>');
 
     for (var key in self.templates) {
         if (!self.templates.hasOwnProperty(key)) return;
 
         var value = self.templates[key]._id;
         var name = self.templates[key].options.label[M.getLocale()];
-        var $option = $("<option>").attr("value", value).text(name);
+        var $option = $('<option>').attr('value', value).text(name);
         $options.append($option);
     }
 
@@ -296,7 +296,7 @@ function showMappings (path, callback) {
         }
 
         self.mappings = mappings;
-        self.emit("_renderTable");
+        self.emit('_renderTable');
 
         // remove all the files
         self.$.fields.empty();

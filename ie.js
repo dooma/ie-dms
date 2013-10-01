@@ -30,7 +30,7 @@ module.exports = function (config) {
             schema: 1
         };
         var filter = {
-            _id: { $nin: ["000000000000000000000004"] }
+            _id: { $nin: ['000000000000000000000004'] }
         }
 
         var crudObj = {
@@ -45,7 +45,7 @@ module.exports = function (config) {
             crudObj.q[key] = filter[key];
         }
 
-        self.emit("find", crudObj, function(err, data) {
+        self.emit('find', crudObj, function(err, data) {
 
             if (err) {
                 console.error(err);
@@ -53,7 +53,7 @@ module.exports = function (config) {
             }
 
             self.templates = data;
-            self.emit("_setTemplates");
+            self.emit('_setTemplates');
         });
     }
 
