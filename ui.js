@@ -41,6 +41,8 @@ module.exports = function () {
     // the field container
     self.$.fields = $(self.config.ui.selectors.fields, self.dom);
 
+    // field template
+    self.$.fieldTemplate = $(".field-template", self.dom);
 
     // the template select
     self.$.select = $(self.config.ui.selectors.template, self.dom);
@@ -138,6 +140,8 @@ function setTemplateFields (selected) {
         self.$.fields.empty();
         // delete the saved template
         delete self.template;
+        // hide mapping fields
+        $(".mapping-fields").hide();
         return;
     }
 
@@ -150,9 +154,13 @@ function setTemplateFields (selected) {
         fieldSelect = ".field-select";
 
     // set template
-    var $template = $(template, self.dom);
+    var $template = self.$.fieldTemplate;
     var $fieldsToAdd = [];
 
+    // show mapping fields
+    $(".mapping-fields").show();
+
+    // reorder the fields
     var orderedFields = [];
     for (var key in schema) {
         var obj = schema[key];
@@ -203,10 +211,10 @@ function setTemplateFields (selected) {
         $fieldsToAdd.push($field);
     }
 
-    // reorder the fields
-
-    // append all fields
-    self.$.fields.append($fieldsToAdd);
+    // empty all fields
+    self.$.fields.empty()
+        // and append the new fields
+        .append($fieldsToAdd);
 };
 
 function appendFile (file) {
