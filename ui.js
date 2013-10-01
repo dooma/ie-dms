@@ -257,9 +257,6 @@ function setTemplates () {
     var $options = $("<div>");
 
     var $option = $("<option>");
-    $option.attr("value", "");
-    $option.text("--- Select template ---");
-    $options.append($option);
 
     for (var key in self.templates) {
         if (!self.templates.hasOwnProperty(key)) return;
