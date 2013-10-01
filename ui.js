@@ -197,9 +197,6 @@ function setTemplateFields (selected) {
         var options = self.mappings.lines[0];
 
         var $option = $("<option>");
-        $option.attr("value", "");
-        $option.text("--- Select column ---");
-        $options.push($option);
 
         for (var i = 0; i < options.length; ++i) {
             var $option = $("<option>");
