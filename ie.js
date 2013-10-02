@@ -1,6 +1,8 @@
 M.wrap('github/gabipetrovay/ie-dms/dev/ie.js', function (require, module, exports) {
 
 var ui = require('./ui');
+var Bind = require('github/jillix/bind');
+var Events = require('github/jillix/events');
 
 module.exports = function (config) {
 
@@ -8,7 +10,9 @@ module.exports = function (config) {
     self.config = config;
     self.inbox = [];
     self.$ = {};
-
+    
+    Events.call(self, config);
+    
     getTemplates.call(self);
 
     if (self.config.ui) {
