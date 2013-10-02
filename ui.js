@@ -194,7 +194,7 @@ function setTemplateFields (selected) {
         //      I think server should validate csv file and send always a correct
         //      response
         var $options = [];
-        var options = self.mappings.lines[0];
+        var options = self.columns.lines[0];
 
         for (var i = 0; i < options.length; ++i) {
             var $option = $('<option>');
@@ -281,7 +281,7 @@ function showMappings (path, callback) {
         $pathLabel.text(path);
     }
 
-    self.link('getColumns', { data: { path: path } }, function(err, mappings) {
+    self.link('getColumns', { data: { path: path } }, function(err, columns) {
 
         // end the waiter
         self.emit('_endWaiting', 'mapping');
@@ -291,7 +291,7 @@ function showMappings (path, callback) {
             return;
         }
 
-        self.mappings = mappings;
+        self.columns = columns;
         self.emit('_renderTable');
 
         // remove all the files
@@ -304,9 +304,9 @@ function renderTable () {
     //clear the table
     $(self.config.ui.selectors.mappingTable).html('');
 
-    if (self.mappings) {
+    if (self.columns) {
         //get the table data
-        var lines = self.mappings.lines;
+        var lines = self.columns.lines;
 
         var body = '<tbody>';
         for (var i = 0; i < lines.length; ++i) {
