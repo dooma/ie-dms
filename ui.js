@@ -73,15 +73,20 @@ module.exports = function () {
     // TODO Why this doesn't work?
     // $(self.dom).on("change", "select[data-field]", function () {
     $(document).on("change", "select[data-field]", function () {
+        // get field name
         var field = $(this).attr("data-field");
-        var value = $(this).find("option:selected").index();
+        // and its value
+        var value = $(this).val();
 
+        // set it in mappings
         self.mappings[field] = value;
 
-        if (!value) {
+        // if value is empty, delete that field
+        if (value === "" || value === undefined) {
             delete self.mappings[field];
         }
 
+        // refresh table
         self.emit("_refreshTable");
     });
 
@@ -213,11 +218,15 @@ function setTemplateFields (selected) {
         var $options = [];
         var options = self.columns.lines[0];
 
+        // for each option
         for (var i = 0; i < options.length; ++i) {
+            // build a new jQuery option element
             var $option = $('<option>');
-            $option.attr('value', options[i]);
-            // TODO i18n
+            // and set its value
+            $option.attr('value', i.toString());
+            // and the label
             $option.text('Column ' + (i + 1) + (options[i] ? ' (' + options[i] + ')' : ''));
+            // and finally, push it
             $options.push($option);
         }
 
