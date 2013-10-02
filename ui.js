@@ -68,6 +68,22 @@ module.exports = function () {
     // read the inbox
     self.emit('readInbox');
 
+    self.mappings = {};
+    // detect data-field select change
+    // TODO Why this doesn't work?
+    // $(self.dom).on("change", "select[data-field]", function () {
+    $(document).on("change", "select[data-field]", function () {
+        var field = $(this).attr("data-field");
+        var value = $(this).val();
+
+        if (!value) {
+            delete self.mappings[field];
+        }
+
+        self.mappings[field] = value;
+        self.emit("_refreshTable");
+    });
+
     // add change handler for template select
     templateChangeHandler.call(self);
 }
@@ -205,7 +221,7 @@ function setTemplateFields (selected) {
         }
 
         // append options
-        $(fieldSelect, $field).append($options);
+        $(fieldSelect, $field).append($options).attr("data-field", orderedFields[field].keyName);
 
         // push field into array
         $fieldsToAdd.push($field);
