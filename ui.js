@@ -74,13 +74,14 @@ module.exports = function () {
     // $(self.dom).on("change", "select[data-field]", function () {
     $(document).on("change", "select[data-field]", function () {
         var field = $(this).attr("data-field");
-        var value = $(this).val();
+        var value = $(this).find("option:selected").index();
+
+        self.mappings[field] = value;
 
         if (!value) {
             delete self.mappings[field];
         }
 
-        self.mappings[field] = value;
         self.emit("_refreshTable");
     });
 
