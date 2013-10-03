@@ -347,7 +347,7 @@ function refreshTable () {
             var dataLine = {};
             if (lines[line]) {
                 for(var field in lineTemplate) {
-                    dataLine[field] = lines[line][lineTemplate[field] - 1];
+                    dataLine[field] = lines[line][lineTemplate[field]];
                 }
                 data.push(dataLine);
             }
