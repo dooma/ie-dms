@@ -75,13 +75,13 @@ module.exports = function () {
         // get field name
         var field = $(this).attr("data-field");
         // and its value
-        var value = $(this).val();
+        var value = parseInt($(this).val());
 
         // set it in mappings
         self.mappings[field] = value;
 
         // if value is empty, delete that field
-        if (value === "" || value === undefined) {
+        if (isNaN(value)) {
             delete self.mappings[field];
         }
 
@@ -342,7 +342,7 @@ function refreshTable () {
                 }
             }
         }
-        
+
         for (var line = 1; line < lines.length; ++line) {
             var dataLine = {};
             if (lines[line]) {
