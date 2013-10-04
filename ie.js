@@ -4,30 +4,6 @@ var ui = require('./ui');
 var Bind = require('github/jillix/bind');
 var Events = require('github/jillix/events');
 
-function flattenObject (obj) {
-    var toReturn = {};
-
-    for (var key in obj) {
-        if (!obj.hasOwnProperty(key)) {
-             continue;
-        }
-
-        if (typeof obj[key] === 'object' && !(obj[key] instanceof Array)) {
-            var flatObject = flattenObject(obj[key]);
-            for (var x in flatObject) {
-                if (!flatObject.hasOwnProperty(x)) {
-                     continue;
-                }
-
-                toReturn[key + '.' + x] = flatObject[x];
-            }
-        } else {
-            toReturn[key] = obj[key];
-        }
-    }
-    return toReturn;
-};
-
 module.exports = function (config) {
 
     var self = this;
@@ -49,50 +25,21 @@ module.exports = function (config) {
 
     function getTemplates () {
 
-        var query = {};
-        var options = {};
-        var fields = {
-            options: 1,
-            _id: 1,
-            uploads: 1,
-            schema: 1
-        };
-        var filter = {
-            _id: { $nin: ['000000000000000000000004'] }
-        }
+        // get templates
+        self.emit('getTemplates', ["00000000000000000000000"], function(err, data) {
 
-        var crudObj = {
-            t: '000000000000000000000000',
-            q: query,
-            o: options,
-            f: fields
-        };
-
-        for (var key in filter) {
-            if (!filter.hasOwnProperty(key)) return;
-            crudObj.q[key] = filter[key];
-        }
-
-        self.emit('find', crudObj, function(err, data) {
-
+            // handle error
             if (err) {
                 console.error(err);
                 return;
             }
 
-            // save templates in dot notation
-            var dotNotationTemplates = [];
+            // TODO Remove role template from array
 
-            // each template
-            for (var i = 0; i < data.length; ++i) {
-
-                // push its dot notation format in the array
-                dotNotationTemplates.push(flattenObject(data[i]));
-            }
-
-            // and finally, set self.templates
+            // and finally set self.templates
             self.templates = dotNotationTemplates;
-            debugger;
+
+            // and emit some events
             self.emit('_setTemplates');
         });
     }
