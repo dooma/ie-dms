@@ -4,15 +4,39 @@ var ui = require('./ui');
 var Bind = require('github/jillix/bind');
 var Events = require('github/jillix/events');
 
+function flattenObject (obj) {
+    var toReturn = {};
+
+    for (var key in obj) {
+        if (!obj.hasOwnProperty(key)) {
+             continue;
+        }
+
+        if (typeof obj[key] === 'object' && !(obj[key] instanceof Array)) {
+            var flatObject = flattenObject(obj[key]);
+            for (var x in flatObject) {
+                if (!flatObject.hasOwnProperty(x)) {
+                     continue;
+                }
+
+                toReturn[key + '.' + x] = flatObject[x];
+            }
+        } else {
+            toReturn[key] = obj[key];
+        }
+    }
+    return toReturn;
+};
+
 module.exports = function (config) {
 
     var self = this;
     self.config = config;
     self.inbox = [];
     self.$ = {};
-    
+
     Events.call(self, config);
-    
+
     getTemplates.call(self);
 
     if (self.config.ui) {
@@ -56,7 +80,19 @@ module.exports = function (config) {
                 return;
             }
 
-            self.templates = data;
+            // save templates in dot notation
+            var dotNotationTemplates = [];
+
+            // each template
+            for (var i = 0; i < data.length; ++i) {
+
+                // push its dot notation format in the array
+                dotNotationTemplates.push(flattenObject(data[i]));
+            }
+
+            // and finally, set self.templates
+            self.templates = dotNotationTemplates;
+            debugger;
             self.emit('_setTemplates');
         });
     }
