@@ -167,7 +167,6 @@ function setTemplateFields (selected) {
     }
 
     self.template = JSON.parse(JSON.stringify(selected));
-    var schema = self.template.schema;
 
     // TODO Move to config
     var template    = '.field-template',
@@ -183,10 +182,49 @@ function setTemplateFields (selected) {
 
     // reorder the fields
     var orderedFields = [];
-    for (var key in schema) {
-        var obj = schema[key];
-        obj.keyName = key;
+    for (var key in self.template) {
 
+        var splits = key.split(".");
+        // get schema fields
+        if (splits[0] !== "schema") { continue; }
+
+        // TODO Use continue in the second for
+        var cont = 0;
+
+        // verify if it has pushed already
+        for (var i = 0; i < orderedFields.length; ++i) {
+            if (orderedFields[i].keyName === splits[1]) {
+                // TODO Here... :-)
+                cont = 1;
+            }
+        }
+
+        // if cont, conitnue
+        if (cont) { continue; }
+
+        // it is a schema field
+        var obj = {};
+
+        // it's a label, yey! We need labels!
+        if (splits[2] !== "label") {
+            continue;
+        }
+
+        // set keyName
+        obj.keyName = splits[1];
+
+        // and the order
+        obj.order = self.template[splits[0] + "." + splits[1] + ".order"];
+
+        // and label (object: using getLocale)
+        obj.label = self.template[key.substring(0, key.lastIndexOf(".")) + "." + M.getLocale()];
+
+        // if it is undefined, then it has to be a string
+        if (!obj.label) {
+            obj.label = self.template[key.substring(0, key.lastIndexOf("."))];
+        }
+
+        // ...and push the object
         orderedFields.push(obj);
     }
 
@@ -211,9 +249,6 @@ function setTemplateFields (selected) {
         );
 
         // add options
-        // TODO Is mappings in the correct format?
-        //      I think server should validate csv file and send always a correct
-        //      response
         var $options = [];
         var options = self.columns.lines[0];
 
