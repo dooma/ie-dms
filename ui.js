@@ -278,7 +278,7 @@ function setTemplates () {
 
     for (var i = 0; i < self.templates.length; ++i) {
         var value = self.templates[i]._id;
-        var name = self.templates[i]["options.label"][M.getLocale()];
+        var name = self.templates[i]["options.label." + M.getLocale()];
         var $option = $('<option>').attr('value', value).text(name);
         $options.append($option);
     }
