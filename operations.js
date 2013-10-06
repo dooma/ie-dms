@@ -109,23 +109,43 @@ console.dir(link.data);
     // the file path from inbox directory
     var path = APP_DIR + '/' + link.params.inboxDir + '/' + link.data.path;
 
+    // separators
+    var separators = {
+        "COMMA"     : ",",
+        "SEMICOLON" : ";",
+        "TAB"       : "\t",
+        "SPACE"     : " "
+    };
 
     // get the lines from file
     fs.readFile(path, function (err, fileContent) {
+
+        // handle error
         if (err) { return link.send(400, err); }
 
+        // get file content
         fileContent = fileContent.toString();
 
-        var l = link.data.l || 10;
+        // how many lines?
+        var l = link.data.linesCount || 10;
+
+        // number of lines from file
         var linesCount = fileContent.split("\n").length;
 
+        // cannot choose a number of lines greater than
+        // the number of lines from file
         if (l > linesCount) {
             l = linesCount;
         }
 
-        var s = getCSVSeparator(fileContent);
-        var c = Charset.detect(fileContent).encoding;
+        // separator
+        var s = link.data.separator || getCSVSeparator(fileContent)[0];
+        s = separators[s] || s;
 
+        // charset
+        var c = link.data.charset || Charset.detect(fileContent).encoding;
+
+        // set parse options
         var options = {
             delimiter: s,
             charset: c
@@ -133,25 +153,32 @@ console.dir(link.data);
 
         var i = 0;
         var lines = [];
+        // parse the file
         CSV.parse(path, options, function (err, row, next) {
 
+            // handle error
             if (err) { return link.send(400, err); }
 
+            // push line
             lines.push(row);
+
+            // push next line
             if (++i < l) {
                 next();
             }
             else {
+                // set mappings obj
                 var mappings = {
                     lines: lines,
+                    linesCount: l,
                     separator: s,
                     charset: c
                 };
 
+                // send response
                 link.send(200, mappings);
             }
         });
-
     });
 
 }, 500);

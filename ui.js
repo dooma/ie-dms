@@ -46,6 +46,9 @@ module.exports = function () {
     // the template select
     self.$.select = $(self.config.ui.selectors.template, self.dom);
 
+    // columsData cache
+    self.columsData = {};
+
     $(self.dom).on('click', self.config.ui.selectors.mappingBack, function() {
         self.emit('reset');
     });
@@ -74,6 +77,7 @@ module.exports = function () {
     $(document).on("change", "select[data-field]", function () {
         // get field name
         var field = $(this).attr("data-field");
+
         // and its value
         var value = parseInt($(this).val());
 
@@ -85,8 +89,25 @@ module.exports = function () {
             delete self.mappings[field];
         }
 
+        // delete first line if it contains the headers
+        if ($(".headersInFirstLine", self.dom).prop("checked")) {
+            self.colums.lines.splice(0, 1);
+        }
+
         // refresh table
         self.emit("_refreshTable");
+    });
+
+    // changes in data-option fields
+    $(document).on("change", "#" + self.miid + " [data-option]", function () {
+        // get option name
+        var option = $(this).attr("data-option");
+
+        // update colums data
+        self.columsData[option] = $(this).val();
+
+        // and show mappings
+        self.emit("_showMappings");
     });
 
     // add change handler for template select
@@ -285,7 +306,10 @@ function appendFile (file) {
 
     $file.find(ps).html(file.path);
     $file.on('click', self.config.ui.selectors.inboxFileImport, function() {
-        self.emit('_showMappings', $(this).parents(self.config.ui.selectors.file).find(ps).text());
+        // save path in colums data
+        self.columsData.path = $(this).parents(self.config.ui.selectors.file).find(ps).text();
+        // and show mappings
+        self.emit('_showMappings');
     });
     $file.on('click', self.config.ui.selectors.inboxFileDelete, function() {
         var $thisFile = $(this).parents(self.config.ui.selectors.file);
@@ -326,7 +350,7 @@ function deleteFile (path, callback) {
     self.link('deleteFile', { data: path }, callback);
 }
 
-function showMappings (path, callback) {
+function showMappings (callback) {
     var self = this;
 
     // start a waiter
@@ -334,12 +358,12 @@ function showMappings (path, callback) {
 
     var $pathLabel = self.$.pages.mapping.find(self.config.ui.selectors.mappingPath);
     if ($pathLabel.prop('tagName') === 'INPUT') {
-        $pathLabel.val(path);
+        $pathLabel.val(self.columsData.path);
     } else {
-        $pathLabel.text(path);
+        $pathLabel.text(self.columsData.path);
     }
 
-    self.link('getColumns', { data: { path: path } }, function(err, columns) {
+    self.link('getColumns', { data: self.columsData }, function(err, columns) {
 
         // end the waiter
         self.emit('_endWaiting', 'mapping');
@@ -347,6 +371,22 @@ function showMappings (path, callback) {
         if (err) {
             alert(err);
             return;
+        }
+
+        // separators
+        var separators = {
+            ",": "COMMA",
+            ";": "SEMICOLON",
+            "\t": "TAB",
+            " ": "SPACE"
+        };
+
+        // set separator
+        columns.separator = separators[columns.separator];
+
+        // update options in UI
+        for (var op in columns) {
+            $("[data-option='" + op + "']", self.dom).val(columns[op]);
         }
 
         self.columns = columns;
