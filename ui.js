@@ -162,10 +162,9 @@ function getSelectedTemplate (templId) {
 
     var self = this;
 
-    for (var i = 0; i < self.templates.length; ++i) {
-        var cTemplate = self.templates[i];
-        if (cTemplate._id === templId) {
-            return cTemplate;
+    for (var templateId in self.templates) {
+        if (templateId === templId) {
+            return self.templates[templateId];
         }
     }
 
@@ -203,18 +202,17 @@ function setTemplateFields (selected) {
 
     // reorder the fields
     var orderedFields = [];
-    for (var key in self.template) {
+    var schema = self.template.schema;
+    for (var key in schema) {
 
         var splits = key.split(".");
-        // get schema fields
-        if (splits[0] !== "schema") { continue; }
 
         // TODO Use continue in the second for
         var cont = 0;
 
         // verify if it has pushed already
         for (var i = 0; i < orderedFields.length; ++i) {
-            if (orderedFields[i].keyName === splits[1]) {
+            if (orderedFields[i].keyName === splits[0]) {
                 // TODO Here... :-)
                 cont = 1;
             }
@@ -226,23 +224,24 @@ function setTemplateFields (selected) {
         // it is a schema field
         var obj = {};
 
-        // it's a label, yey! We need labels!
-        if (splits[2] !== "label") {
+        // the label doesn't exist. We need labels!
+        if (!schema[key].label) {
             continue;
         }
 
         // set keyName
-        obj.keyName = splits[1];
+        obj.keyName = splits[0];
 
         // and the order
-        obj.order = self.template[splits[0] + "." + splits[1] + ".order"];
+        obj.order = schema[key].order;
 
         // and label (object: using getLocale)
-        obj.label = self.template[key.substring(0, key.lastIndexOf(".")) + "." + M.getLocale()];
+        obj.label = schema[key].label[M.getLocale()];
 
-        // if it is undefined, then it has to be a string
+        // if it is undefined, then it must be a string
+        // if it really doesn't exist, key will appear in UI
         if (!obj.label) {
-            obj.label = self.template[key.substring(0, key.lastIndexOf("."))];
+            obj.label = schema[key].label || key;
         }
 
         // ...and push the object
@@ -258,35 +257,32 @@ function setTemplateFields (selected) {
     });
 
     // add the fields
-    for (var field = 0; field < orderedFields.length; ++field) {
+    for (var i = 0; i < orderedFields.length; ++i) {
 
         // clone template
         var $field = $template.clone().removeClass(template.substring(1));
 
         // set the label
-        $field.find(name).text(
-            (orderedFields[field].label || {})[M.getLocale()] ||
-            orderedFields[field].keyName
-        );
+        $field.find(name).text(orderedFields[i].label);
 
         // add options
         var $options = [];
         var options = self.columns.lines[0];
 
         // for each option
-        for (var i = 0; i < options.length; ++i) {
+        for (var ii = 0; ii < options.length; ++ii) {
             // build a new jQuery option element
             var $option = $('<option>');
             // and set its value
-            $option.attr('value', i.toString());
+            $option.attr('value', ii.toString());
             // and the label
-            $option.text('Column ' + (i + 1) + (options[i] ? ' (' + options[i] + ')' : ''));
+            $option.text('Column ' + (ii + 1) + (options[ii] ? ' (' + options[ii] + ')' : ''));
             // and finally, push it
             $options.push($option);
         }
 
         // append options
-        $(fieldSelect, $field).append($options).attr("data-field", orderedFields[field].keyName);
+        $(fieldSelect, $field).append($options).attr("data-field", orderedFields[i].keyName);
 
         // push field into array
         $fieldsToAdd.push($field);
@@ -335,9 +331,9 @@ function setTemplates () {
     var selectElem = self.config.ui.selectors.template;
     var $options = $('<div>');
 
-    for (var i = 0; i < self.templates.length; ++i) {
-        var value = self.templates[i]._id;
-        var name = self.templates[i]["options.label." + M.getLocale()];
+    for (var templateId in self.templates) {
+        var value = templateId;
+        var name = self.templates[templateId].options.label[M.getLocale()] || self.templates[templateId].options.label;
         var $option = $('<option>').attr('value', value).text(name);
         $options.append($option);
     }
@@ -465,6 +461,9 @@ function endWaiting (pageId) {
 
 function reset () {
     var self = this;
+
+    // colums data is cleaned up
+    self.columsData = {};
 
     self.$.pages['mapping'].hide();
     self.$.pages['inbox'].show();

@@ -25,8 +25,21 @@ module.exports = function (config) {
 
     function getTemplates () {
 
-        // get templates
-        self.emit('getTemplates', ["00000000000000000000000"], function(err, data) {
+        var query = {};
+        var options = {};
+        var fields = {
+            _id: 1
+        };
+
+        var crudObj = {
+            t: '000000000000000000000000',
+            q: query,
+            o: options,
+            f: fields
+        };
+
+        // get all template ids
+        self.emit("find", crudObj, function (err, data) {
 
             // handle error
             if (err) {
@@ -34,13 +47,28 @@ module.exports = function (config) {
                 return;
             }
 
-            // TODO Remove role template from array
+            // an array with template ids
+            var _ids = [];
+            for (var i = 0; i < data.length; ++i) {
+                if (data[i]._id === '000000000000000000000004') { continue; }
+                _ids.push(data[i]._id);
+            }
 
-            // and finally set self.templates
-            self.templates = dotNotationTemplates;
+            // get templates
+            self.emit('getTemplates', _ids, function(err, data) {
 
-            // and emit some events
-            self.emit('_setTemplates');
+                // handle error
+                if (err) {
+                    console.error(err);
+                    return;
+                }
+
+                // and finally set self.templates
+                self.templates = data;
+
+                // and emit some events
+                self.emit('_setTemplates');
+            });
         });
     }
 
