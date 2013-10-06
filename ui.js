@@ -395,8 +395,8 @@ function showMappings (callback) {
 function refreshTable () {
     var self = this;
 
-    if (getSelectedTemplate.call(self, self.template._id)) {
-       var template = getSelectedTemplate.call(self, self.template._id);
+    if (getSelectedTemplate.call(self, self.template.id)) {
+       var template = getSelectedTemplate.call(self, self.template.id);
     }
     var lines = self.columns.lines;
 
