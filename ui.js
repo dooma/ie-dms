@@ -183,6 +183,8 @@ function getSelectedTemplate (templateId) {
     var self = this;
 
     for (var templateId in self.templates) {
+        if (!self.templates.hasOwnProperty(templateId)) continue;
+
         if (templateId === templateId) {
             return self.templates[templateId];
         }
@@ -319,6 +321,8 @@ function setTemplates () {
     var $options = $('<div>');
 
     for (var templateId in self.templates) {
+        if (!self.templates.hasOwnProperty(templateId)) continue;
+
         var value = templateId;
         var name = self.templates[templateId].options.label[M.getLocale()] || self.templates[templateId].options.label;
         var $option = $('<option>').attr('value', value).text(name);

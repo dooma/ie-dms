@@ -43,16 +43,7 @@ function setTemplate (templateId) {
         return;
     }
 
-    self.emit('getTemplates', [templateId], function(err, templates) {
-
-        if (err) {
-            alert(err);
-            return;
-        }
-
-        delete self.mappings;
-        self.template = JSON.parse(JSON.stringify(templates[templateId]));
-    });
+    self.template = JSON.parse(JSON.stringify(self.templates[templateId]));
 }
 
 function getTemplates () {
@@ -81,27 +72,17 @@ function getTemplates () {
         }
 
         // an array with template ids
-        var _ids = [];
+        self.templates = {};
         for (var i = 0; i < data.length; ++i) {
-            if (data[i]._id === '000000000000000000000004') { continue; }
-            _ids.push(data[i]._id);
+            if (data[i]._id === '000000000000000000000004') {
+                continue;
+            }
+            self.templates[data[i]._id] = data[i];
         }
 
-        // get templates
-        self.emit('getTemplates', _ids, function(err, data) {
-
-            // handle error
-            if (err) {
-                console.error(err);
-                return;
-            }
-
-            // and finally set self.templates
-            self.templates = data;
-
-            // and emit some events
-            self.emit('_setTemplates');
-        });
+        // and emit some events
+        self.emit('_setTemplates');
+        return;
     });
 }
 
