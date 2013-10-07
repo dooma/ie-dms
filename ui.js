@@ -88,6 +88,24 @@ module.exports = function () {
         // refresh table
         self.emit("_refreshTable");
     });
+    
+    // TODO remove hardcoded selectors
+    $(document).on("change", "input[name=operation]:radio", function () {
+        
+        var operation = $("input[name=operation]:radio:checked").val();
+        
+        if (operation === "insert") {
+            $("#upsert").attr("disabled", true);
+            $(".update").each(function () {
+                $(this).hide();
+            });
+        } else {
+            $("#upsert").removeAttr("disabled");
+            $(".update").each(function () {
+                $(this).show();
+            });
+        }
+    });
 
     // add change handler for template select
     templateChangeHandler.call(self);
