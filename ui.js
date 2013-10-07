@@ -46,6 +46,9 @@ module.exports = function () {
     // the template select
     self.$.select = $(self.config.ui.selectors.template, self.dom);
 
+    // columsData cache
+    self.columsData = {};
+
     $(self.dom).on('click', self.config.ui.selectors.mappingBack, function() {
         self.emit('reset');
     });
@@ -57,36 +60,55 @@ module.exports = function () {
     self.on('_showMappings', showMappings);
     self.on('_setTemplates', setTemplates);
     self.on('_refreshTable', refreshTable);
+    self.on('_refreshFields', refreshFields);
 
     // configure external events
     self.on('readInbox', readInbox);
     self.on('reset', reset);
+    self.on('setTemplate', setTemplate);
 
     // ******************************************
 
     // read the inbox
     self.emit('readInbox');
 
-    self.mappings = {};
-    // detect data-field select change
+    // detect field select change
     // TODO Why this doesn't work?
-    // $(self.dom).on("change", "select[data-field]", function () {
-    $(document).on("change", "select[data-field]", function () {
+    //$(self.dom).on('change', 'select.field-select', function () {
+    $(document).on('change', 'select.field-select', function () {
         // get field name
-        var field = $(this).attr("data-field");
-        // and its value
-        var value = parseInt($(this).val());
+        var columnIndex = parseInt($(this).val());
+        var fieldKey = $(this).attr('name');
 
-        // set it in mappings
-        self.mappings[field] = value;
+        self.mappings = self.mappings || {};
 
-        // if value is empty, delete that field
-        if (isNaN(value)) {
-            delete self.mappings[field];
+        if (isNaN(columnIndex)) {
+            // if empty value, delete that field
+            delete self.mappings[fieldKey];
+        } else {
+            // else set it in mappings
+            self.mappings[fieldKey] = columnIndex;
+        }
+
+        // delete first line if it contains the headers
+        if ($('.headersInFirstLine', self.dom).prop('checked')) {
+            self.colums.lines.splice(0, 1);
         }
 
         // refresh table
-        self.emit("_refreshTable");
+        self.emit('_refreshTable');
+    });
+
+    // changes in data-option fields
+    $(document).on("change", "#" + self.miid + " [data-option]", function () {
+        // get option name
+        var option = $(this).attr("data-option");
+
+        // update colums data
+        self.columsData[option] = $(this).val();
+
+        // and show mappings
+        self.emit("_showMappings");
     });
     
     // TODO remove hardcoded selectors
@@ -110,7 +132,6 @@ module.exports = function () {
     // add change handler for template select
     templateChangeHandler.call(self);
 }
-
 
 function readInbox () {
     var self = this;
@@ -150,19 +171,40 @@ function templateChangeHandler () {
 
     $(self.dom).off('change');
     $(self.dom).on('change', self.config.ui.selectors.template, function () {
-        setTemplateFields.call(self, getSelectedTemplate.call(self, ($(this).val())));
-        self.emit("_refreshTable");
+        self.emit('setTemplate', $(this).val());
     });
 }
 
-function getSelectedTemplate (templId) {
+function resetMappings () {
+    var self = this;
+
+
+}
+
+function setTemplate (templateId) {
+    var self = this;
+
+    // we reset if the user clears the template selection
+    if (!templateId) {
+        self.emit('reset');
+        return;
+    }
+
+    // otherwise we refresh the fields and the table
+    self.emit('template', self.template);
+    self.emit('_refreshFields');
+    self.emit('_refreshTable');
+}
+
+function getSelectedTemplate (templateId) {
 
     var self = this;
 
-    for (var i = 0; i < self.templates.length; ++i) {
-        var cTemplate = self.templates[i];
-        if (cTemplate._id === templId) {
-            return cTemplate;
+    for (var templateId in self.templates) {
+        if (!self.templates.hasOwnProperty(templateId)) continue;
+
+        if (templateId === templateId) {
+            return self.templates[templateId];
         }
     }
 
@@ -170,27 +212,18 @@ function getSelectedTemplate (templId) {
 }
 
 // Set template fields to DOM if page is rendered. Otherwise, it does not render templates options again.
-function setTemplateFields (selected) {
+function refreshFields () {
 
     var self = this;
 
-    if (!selected) {
-        // empty the fields
-        self.$.fields.empty();
-        // delete the saved template
-        delete self.template;
-        // hide mapping fields
-        $('.mapping-fields').hide();
+    if (!self.template) {
         return;
     }
 
-    self.template = JSON.parse(JSON.stringify(selected));
-    var schema = self.template.schema;
-
     // TODO Move to config
-    var template    = '.field-template',
-        name        = '.field-name',
-        fieldSelect = '.field-select';
+    var templateSel    = '.field-template',
+        nameSel        = '.field-name',
+        fieldSelectSel = '.field-select';
 
     // set template
     var $template = self.$.fieldTemplate;
@@ -200,55 +233,65 @@ function setTemplateFields (selected) {
     $('.mapping-fields').show();
 
     // reorder the fields
-    var orderedFields = [];
-    for (var key in schema) {
-        var obj = schema[key];
-        obj.keyName = key;
+    var fields = [];
+    var schema = self.template.schema;
 
-        orderedFields.push(obj);
+    for (var key in schema) {
+        if (!schema.hasOwnProperty(key)) continue;
+        if (key[0] === '_') continue;
+
+        // clone the schema field to avoid changes in the referenced object
+        var field = JSON.parse(JSON.stringify(schema[key]));
+
+        var label = field.label || key;
+        if (typeof label === 'object') {
+            label = label[M.getLocale()] || key;
+        }
+
+        field.key = key;
+        field.label = label;
+
+        fields.push(field);
     }
 
-    orderedFields.sort(function(f1, f2) {
+    fields.sort(function(f1, f2) {
         if (f1.order < f2.order) {
             return -1;
-        } else {
+        } else if (f1.order > f2.order) {
             return 1;
+        } else {
+            return f1.label <= f2.label ? -1 : 1;
         }
     });
 
     // add the fields
-    for (var field = 0; field < orderedFields.length; ++field) {
+    for (var i = 0; i < fields.length; ++i) {
 
-        // clone template
-        var $field = $template.clone().removeClass(template.substring(1));
+        // clone DOM template
+        // TODO possible error due to substring
+        var $field = $template.clone().removeClass(templateSel.substring(1));
 
         // set the label
-        $field.find(name).text(
-            (orderedFields[field].label || {})[M.getLocale()] ||
-            orderedFields[field].keyName
-        );
+        $field.find(nameSel).text(fields[i].label);
 
         // add options
-        // TODO Is mappings in the correct format?
-        //      I think server should validate csv file and send always a correct
-        //      response
         var $options = [];
         var options = self.columns.lines[0];
 
         // for each option
-        for (var i = 0; i < options.length; ++i) {
+        for (var j = 0; j < options.length; ++j) {
             // build a new jQuery option element
             var $option = $('<option>');
-            // and set its value
-            $option.attr('value', i.toString());
+            // and set its value to the field key
+            $option.attr('value', j);
             // and the label
-            $option.text('Column ' + (i + 1) + (options[i] ? ' (' + options[i] + ')' : ''));
+            $option.text('Column ' + (j + 1) + (options[j] ? ' (' + options[j] + ')' : ''));
             // and finally, push it
             $options.push($option);
         }
 
         // append options
-        $(fieldSelect, $field).append($options).attr("data-field", orderedFields[field].keyName);
+        $(fieldSelectSel, $field).append($options).attr('name', fields[i].key);
 
         // push field into array
         $fieldsToAdd.push($field);
@@ -268,7 +311,10 @@ function appendFile (file) {
 
     $file.find(ps).html(file.path);
     $file.on('click', self.config.ui.selectors.inboxFileImport, function() {
-        self.emit('_showMappings', $(this).parents(self.config.ui.selectors.file).find(ps).text());
+        // save path in colums data
+        self.columsData.path = $(this).parents(self.config.ui.selectors.file).find(ps).text();
+        // and show mappings
+        self.emit('_showMappings');
     });
     $file.on('click', self.config.ui.selectors.inboxFileDelete, function() {
         var $thisFile = $(this).parents(self.config.ui.selectors.file);
@@ -294,11 +340,11 @@ function setTemplates () {
     var selectElem = self.config.ui.selectors.template;
     var $options = $('<div>');
 
-    for (var key in self.templates) {
-        if (!self.templates.hasOwnProperty(key)) return;
+    for (var templateId in self.templates) {
+        if (!self.templates.hasOwnProperty(templateId)) continue;
 
-        var value = self.templates[key]._id;
-        var name = self.templates[key].options.label[M.getLocale()];
+        var value = templateId;
+        var name = self.templates[templateId].options.label[M.getLocale()] || self.templates[templateId].options.label;
         var $option = $('<option>').attr('value', value).text(name);
         $options.append($option);
     }
@@ -311,7 +357,7 @@ function deleteFile (path, callback) {
     self.link('deleteFile', { data: path }, callback);
 }
 
-function showMappings (path, callback) {
+function showMappings (callback) {
     var self = this;
 
     // start a waiter
@@ -319,12 +365,12 @@ function showMappings (path, callback) {
 
     var $pathLabel = self.$.pages.mapping.find(self.config.ui.selectors.mappingPath);
     if ($pathLabel.prop('tagName') === 'INPUT') {
-        $pathLabel.val(path);
+        $pathLabel.val(self.columsData.path);
     } else {
-        $pathLabel.text(path);
+        $pathLabel.text(self.columsData.path);
     }
 
-    self.link('getColumns', { data: { path: path } }, function(err, columns) {
+    self.link('getColumns', { data: self.columsData }, function(err, columns) {
 
         // end the waiter
         self.emit('_endWaiting', 'mapping');
@@ -332,6 +378,22 @@ function showMappings (path, callback) {
         if (err) {
             alert(err);
             return;
+        }
+
+        // separators
+        var separators = {
+            ",": "COMMA",
+            ";": "SEMICOLON",
+            "\t": "TAB",
+            " ": "SPACE"
+        };
+
+        // set separator
+        columns.separator = separators[columns.separator];
+
+        // update options in UI
+        for (var op in columns) {
+            $("[data-option='" + op + "']", self.dom).val(columns[op]);
         }
 
         self.columns = columns;
@@ -343,38 +405,38 @@ function showMappings (path, callback) {
 
 function refreshTable () {
     var self = this;
+    var data = [];
 
-    if (getSelectedTemplate.call(self, self.template._id)) {
-       var template = getSelectedTemplate.call(self, self.template._id);
-    }
-    var lines = self.columns.lines;
-
-    if (!jQuery.isEmptyObject(self.mappings) && template) {
-        var data = [];
+    if (!jQuery.isEmptyObject(self.mappings) && self.template) {
         var lineTemplate = {};
 
-        for (var key in self.mappings) {
-            for (var field in template.schema) {
-                if (key.toLowerCase() === field.toLowerCase()) {
-                    lineTemplate[field] = self.mappings[key];
-                }
-            }
-        }
+        var lines = self.columns.lines || [];
 
-        for (var line = 1; line < lines.length; ++line) {
+        // if headers, ignore first line
+        // TODO add the headers option linked to the headers checkbox
+        for (var i = (self.headers ? 1 : 0); i < lines.length; ++i) {
             var dataLine = {};
-            if (lines[line]) {
-                for(var field in lineTemplate) {
-                    dataLine[field] = lines[line][lineTemplate[field]];
+            for (var fieldKey in self.mappings) {
+                if (!self.mappings.hasOwnProperty(fieldKey)) continue;
+
+                // we must buid real object now not a flat one
+                var splits = fieldKey.split('.');
+                var curObj = dataLine;
+                var j = 0;
+                for (; j < splits.length - 1; ++j) {
+                    curObj[splits[j]] = curObj[splits[j]] || {};
+                    curObj = curObj[splits[j]];
                 }
-                data.push(dataLine);
+                curObj[splits[j]] = self.columns.lines[i][self.mappings[fieldKey]];
             }
+
+            // push the object to the result set
+            data.push(dataLine);
         }
     }
 
-    if (data) {
-        self.emit("template", template);
-        self.emit("result", null, data);
+    if (data.length) {
+        self.emit('result', null, data);
     } else {
         //TODO clear table
     }
@@ -411,10 +473,16 @@ function endWaiting (pageId) {
 function reset () {
     var self = this;
 
+    // hide mapping fields
+    $('.mapping-fields').hide();
+
+    // colums data is cleaned up
+    self.columsData = {};
+
     self.$.pages['mapping'].hide();
     self.$.pages['inbox'].show();
+    // empty the fields
     self.$.fields.empty();
-
 }
 
 return module; });
