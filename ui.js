@@ -239,8 +239,10 @@ function refreshFields () {
     fields.sort(function(f1, f2) {
         if (f1.order < f2.order) {
             return -1;
-        } else {
+        } else if (f1.order > f2.order) {
             return 1;
+        } else {
+            return f1.label <= f2.label ? -1 : 1;
         }
     });
 
