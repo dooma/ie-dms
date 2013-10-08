@@ -100,32 +100,28 @@ module.exports = function () {
     });
 
     // changes in data-option fields
-    $(document).on("change", "#" + self.miid + " [data-option]", function () {
+    $(document).on('change', '#' + self.miid + ' [data-option]', function () {
         // get option name
-        var option = $(this).attr("data-option");
+        var option = $(this).attr('data-option');
 
         // update colums data
         self.columsData[option] = $(this).val();
 
         // and show mappings
-        self.emit("_showMappings");
+        self.emit('_showMappings');
     });
     
     // TODO remove hardcoded selectors
-    $(document).on("change", "input[name=operation]:radio", function () {
-        
-        var operation = $("input[name=operation]:radio:checked").val();
-        
-        if (operation === "insert") {
-            $("#upsert").attr("disabled", true);
-            $(".update").each(function () {
-                $(this).hide();
-            });
+    $(document).on('change', 'input[name=operation]:radio', function () {
+
+        var operation = $('input[name=operation]:radio:checked').val();
+
+        if (operation === 'insert') {
+            $('#upsert').attr('disabled', true);
+            $('.update').hide();
         } else {
-            $("#upsert").removeAttr("disabled");
-            $(".update").each(function () {
-                $(this).show();
-            });
+            $('#upsert').removeAttr('disabled');
+            $('.update').show();
         }
     });
 
@@ -382,10 +378,10 @@ function showMappings (callback) {
 
         // separators
         var separators = {
-            ",": "COMMA",
-            ";": "SEMICOLON",
-            "\t": "TAB",
-            " ": "SPACE"
+            ',': 'COMMA',
+            ';': 'SEMICOLON',
+            '\t': 'TAB',
+            ' ': 'SPACE'
         };
 
         // set separator
@@ -393,7 +389,7 @@ function showMappings (callback) {
 
         // update options in UI
         for (var op in columns) {
-            $("[data-option='" + op + "']", self.dom).val(columns[op]);
+            $('[data-option="' + op + '"]', self.dom).val(columns[op]);
         }
 
         self.columns = columns;
