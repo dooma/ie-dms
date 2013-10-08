@@ -469,14 +469,26 @@ function endWaiting (pageId) {
 function reset () {
     var self = this;
 
+    // remove the template selection
+    $(self.config.ui.selectors.template, self.dom).val(null);
+
     // hide mapping fields
     $('.mapping-fields').hide();
+
+    // remove sample table content
+    // TODO Replace with a clear event emit that the table reacts to.
+    //      The table should probably have 2 clears:
+    //      - clearData
+    //      - clearTemplate (which also clears the data)
+    //      Here we will call then clearTemplate
+    $('.sample-table', self.dom).find('tbody, thead').empty();
 
     // colums data is cleaned up
     self.columsData = {};
 
     self.$.pages['mapping'].hide();
     self.$.pages['inbox'].show();
+
     // empty the fields
     self.$.fields.empty();
 }
