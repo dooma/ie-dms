@@ -127,7 +127,7 @@ console.dir(link.data);
         fileContent = fileContent.toString();
 
         // how many lines?
-        var l = link.data.linesCount || 10;
+        var l = parseInt(link.data.linesCount) || 10;
 
         // number of lines from file
         var linesCount = fileContent.split("\n").length;
