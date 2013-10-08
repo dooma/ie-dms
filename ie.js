@@ -50,16 +50,17 @@ function getTemplates () {
     var self = this;
 
     var query = {};
-    var options = {};
-    var fields = {
-        _id: 1
+    var options = {
+        fields: {
+            _id: 1
+        }
     };
 
     var crudObj = {
         t: '000000000000000000000000',
         q: query,
         o: options,
-        f: fields
+        noMerge: true
     };
 
     // get all template ids

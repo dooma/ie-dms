@@ -235,7 +235,9 @@ function refreshFields () {
     // get the schema fields with keys and computed labels
     for (var key in schema) {
         if (!schema.hasOwnProperty(key)) continue;
-        if (key[0] === '_') continue;
+
+        // ignore core fields and link fields
+        if (key[0] === '_' || schema[key].link) continue;
 
         // clone the schema field to avoid changes in the referenced object
         var field = JSON.parse(JSON.stringify(schema[key]));
