@@ -223,7 +223,7 @@ function refreshFields () {
 
     // set template
     var $template = self.$.fieldTemplate;
-    var $fieldsToAdd = [];
+    var fieldsToAdd = [];
 
     // show mapping fields
     $('.mapping-fields').show();
@@ -232,6 +232,7 @@ function refreshFields () {
     var fields = [];
     var schema = self.template.schema;
 
+    // get the schema fields with keys and computed labels
     for (var key in schema) {
         if (!schema.hasOwnProperty(key)) continue;
         if (key[0] === '_') continue;
@@ -239,6 +240,7 @@ function refreshFields () {
         // clone the schema field to avoid changes in the referenced object
         var field = JSON.parse(JSON.stringify(schema[key]));
 
+        // label (i18n) if available, else key
         var label = field.label || key;
         if (typeof label === 'object') {
             label = label[M.getLocale()] || key;
@@ -250,6 +252,7 @@ function refreshFields () {
         fields.push(field);
     }
 
+    // sort the fields
     fields.sort(function(f1, f2) {
         if (f1.order < f2.order) {
             return -1;
@@ -270,33 +273,23 @@ function refreshFields () {
         // set the label
         $field.find(nameSel).text(fields[i].label);
 
-        // add options
-        var $options = [];
-        var options = self.columns.lines[0];
+        // append options
+        $(fieldSelectSel, $field).append(self.$.options.clone()).attr('name', fields[i].key);
 
-        // for each option
-        for (var j = 0; j < options.length; ++j) {
-            // build a new jQuery option element
-            var $option = $('<option>');
-            // and set its value to the field key
-            $option.attr('value', j);
-            // and the label
-            $option.text('Column ' + (j + 1) + (options[j] ? ' (' + options[j] + ')' : ''));
-            // and finally, push it
-            $options.push($option);
+        if (fields[i].type === 'number') {
+            $('.operator', $field).removeClass('hide');
+        } else {
+            $('.operator', $field).addClass('hide');
         }
 
-        // append options
-        $(fieldSelectSel, $field).append($options).attr('name', fields[i].key);
-
         // push field into array
-        $fieldsToAdd.push($field);
+        fieldsToAdd.push($field);
     }
 
     // empty all fields
     self.$.fields.empty()
         // and append the new fields
-        .append($fieldsToAdd);
+        .append(fieldsToAdd);
 };
 
 function appendFile (file) {
@@ -396,6 +389,23 @@ function showMappings (callback) {
 
         // remove all the files
         self.$.fields.empty();
+
+        // build the options to be cloned later
+        var $options = $('<div>');
+        var firstLine = self.columns.lines[0];
+
+        for (var j = 0; j < firstLine.length; ++j) {
+            // build a new jQuery option element
+            var $option = $('<option>');
+            // and set its value to the field key
+            $option.attr('value', j);
+            // and the label
+            $option.text('Column ' + (j + 1) + (firstLine[j] ? ' (' + firstLine[j] + ')' : ''));
+            // and finally, push it
+            $options.append($option);
+        }
+
+        self.$.options = $options.children();
     });
 }
 
