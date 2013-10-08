@@ -274,7 +274,7 @@ function refreshFields () {
         $field.find(nameSel).text(fields[i].label);
 
         // append options
-        $(fieldSelectSel, $field).append(self.$.options.clone()).attr('name', fields[i].key);
+        $(fieldSelectSel, $field).append(self.$.fieldOptions.clone()).attr('name', fields[i].key);
 
         if (fields[i].type === 'number') {
             $('.operator', $field).removeClass('hide');
@@ -405,7 +405,7 @@ function showMappings (callback) {
             $options.append($option);
         }
 
-        self.$.options = $options.children();
+        self.$.fieldOptions = $options.children();
     });
 }
 
@@ -501,6 +501,9 @@ function reset () {
 
     // empty the fields
     self.$.fields.empty();
+
+    // remove the last getColumns select options
+    self.$.options = $();
 }
 
 return module; });
