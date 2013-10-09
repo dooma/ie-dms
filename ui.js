@@ -96,11 +96,6 @@ module.exports = function () {
             self.mappings[fieldKey] = columnIndex;
         }
 
-        // delete first line if it contains the headers
-        if ($('.headersInFirstLine', self.dom).prop('checked')) {
-            self.colums.lines.splice(0, 1);
-        }
-
         // refresh table
         self.emit('_refreshTable');
     });
@@ -111,12 +106,23 @@ module.exports = function () {
         var option = $(this).attr('data-option');
 
         // update colums data
-        self.columsData[option] = $(this).val();
+        self.columsData[option] = $(this).attr("type") !== "checkbox" ? $(this).val() : $(this).prop("checked");
 
         // and show mappings
-        self.emit('_showMappings');
+        self.emit('_showMappings', function(err) {
+
+            if (err) {
+                alert(err);
+                return;
+            }
+
+            resetMappings.call(self);
+            self.emit('_refreshTable');
+            self.emit("_refreshFields");
+        });
+        
     });
-    
+
     // TODO remove hardcoded selectors
     $(document).on('change', 'input[name=operation]:radio', function () {
 
@@ -180,6 +186,9 @@ function templateChangeHandler () {
 function resetMappings () {
     var self = this;
 
+    if (self.mappings) {
+        self.mappings = {};
+    }
 
 }
 
@@ -215,13 +224,12 @@ function getSelectedTemplate (templateId) {
 
 // Set template fields to DOM if page is rendered. Otherwise, it does not render templates options again.
 function refreshFields () {
-
     var self = this;
 
     if (!self.template) {
         return;
     }
-
+    
     // TODO Move to config
     var templateSel    = '.field-template',
         nameSel        = '.field-name',
@@ -357,6 +365,7 @@ function deleteFile (path, callback) {
 function showMappings (callback) {
     var self = this;
 
+    callback = callback || function () {};
     // start a waiter
     self.emit('_startWaiting');
 
@@ -368,7 +377,6 @@ function showMappings (callback) {
     }
 
     self.link('getColumns', { data: self.columsData }, function(err, columns) {
-
         // end the waiter
         self.emit('_endWaiting', 'mapping');
 
@@ -414,6 +422,8 @@ function showMappings (callback) {
         }
 
         self.$.fieldOptions = $options.children();
+
+        callback(err);
     });
 }
 
@@ -449,7 +459,7 @@ function refreshTable () {
         }
     }
 
-    if (data.length) {
+    if (data) {
         self.emit('result', null, data);
     } else {
         //TODO clear table
