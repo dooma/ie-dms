@@ -8,6 +8,7 @@ module.exports = function () {
     self.config.ui.selectors.waiter = self.config.ui.selectors.waiter || '.waiter';
     self.config.ui.selectors.inboxPage = self.config.ui.selectors.inboxPage || '#inbox';
     self.config.ui.selectors.mappingPage = self.config.ui.selectors.mappingPage || '#mapping';
+    self.config.ui.selectors.import = self.config.ui.selectors.import || '.import-btn';
     // file list
     self.config.ui.selectors.file = self.config.ui.selectors.file || '.file';
     self.config.ui.selectors.files = self.config.ui.selectors.files || '.files';
@@ -52,6 +53,10 @@ module.exports = function () {
     $(self.dom).on('click', self.config.ui.selectors.mappingBack, function() {
         self.emit('reset');
     });
+    
+    $(self.dom).on('click', self.config.ui.selectors.import, function () {
+        self.emit('gatherInfo');
+    });
 
     // configure internal events
     self.on('_startWaiting', startWaiting);
@@ -66,6 +71,7 @@ module.exports = function () {
     self.on('readInbox', readInbox);
     self.on('reset', reset);
     self.on('setTemplate', setTemplate);
+    self.on('gatherInfo', gatherInfo);
 
     // ******************************************
 
@@ -508,4 +514,15 @@ function reset () {
     self.$.options = $();
 }
 
+function gatherInfo () {
+    var self = this;
+    
+    var path = self.columsData.path;
+    var template = $(self.config.ui.selectors.template).val();
+    var separator = self.columns.separator;
+    var charset = "";
+    
+    console.log(template);
+}
+    
 return module; });
