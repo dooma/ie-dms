@@ -116,72 +116,95 @@ exports.getColumns = function (link) {
         "SPACE"     : " "
     };
 
-    // TODO stream the file content here, do not read the entire file
-    //      1. read the first line only
-    //      2. autodetect stuff (sparators, charset)
-    //      3. continue to read lines up to the number wanted by the user
-    //      4. if headers are users, return to the client also a headers: [..] object
-    // get the lines from file
-    fs.readFile(path, function (err, fileContent) {
+    // create the read stream
+    var readStream = fs.createReadStream(path);
 
-        // handle error
-        if (err) { return link.send(400, err); }
+    // initialize first line as empty string
+    var firstLine = "";
 
-        // get file content
-        fileContent = fileContent.toString();
+    // on data
+    readStream.on("data", function (chunk) {
+        // add chunk to firstLine
+        firstLine += chunk;
 
-        // how many lines?
-        var l = parseInt(link.data.lineCount) || 10;
+        // if we have a new line, it means that
+        // we've got the entire first line from file
+        var index = firstLine.indexOf("\n");
 
-        // number of lines from file
-        var lineCount = fileContent.split("\n").length;
+        if (index !== -1) {
 
-        // cannot choose a number of lines greater than
-        // the number of lines from file
-        if (l > lineCount) {
-            l = lineCount;
+            // end stream
+            readStream.close();
+
+            // substring it!
+            firstLine = firstLine.substring(0, index);
+
+            // how many lines?
+            var l = parseInt(link.data.lineCount) || 10;
+
+            // separator
+            var s = link.data.separator || getCSVSeparator(firstLine)[0];
+            s = separators[s] || s;
+
+            // charset
+            var c = link.data.charset || Charset.detect(firstLine).encoding;
+
+            // force hasHeaders to be boolean
+            link.data.hasHeaders = link.data.hasHeaders ? true : false;
+
+            // set parse options
+            var options = {
+                delimiter: s,
+                charset: c
+            };
+
+            var i = 0;
+            var lines = [];
+            var headers;
+
+            // parse the file
+            CSV.parse(path, options, function (err, row, next) {
+
+                // handle error
+                if (err) { return link.send(400, err); }
+
+                // push line or set headers
+                if (link.data.hasHeaders && i === 0) {
+                    headers = row;
+                }
+                else {
+                    lines.push(row);
+                }
+
+                // go to next line
+                if (++i < l) {
+                    next();
+                }
+                else {
+                    // set mappings obj
+                    var mappings = {
+                        // the read lines
+                        lines: lines,
+                        // separator
+                        separator: s,
+                        // charset
+                        charset: c,
+                        // the headers (an array or undefined)
+                        headers: headers,
+                        // hasHeaders: boolean
+                        hasHeaders: link.data.hasHeaders
+                    };
+
+                    // send response
+                    link.send(200, mappings);
+                }
+            });
         }
+    });
 
-        // separator
-        var s = link.data.separator || getCSVSeparator(fileContent)[0];
-        s = separators[s] || s;
-
-        // charset
-        var c = link.data.charset || Charset.detect(fileContent).encoding;
-
-        // set parse options
-        var options = {
-            delimiter: s,
-            charset: c
-        };
-
-        var i = 0;
-        var lines = [];
-        // parse the file
-        CSV.parse(path, options, function (err, row, next) {
-
-            // handle error
-            if (err) { return link.send(400, err); }
-
-            // push line
-            lines.push(row);
-
-            // push next line
-            if (++i < l) {
-                next();
-            }
-            else {
-                // set mappings obj
-                var mappings = {
-                    lines: lines,
-                    separator: s,
-                    charset: c
-                };
-
-                // send response
-                link.send(200, mappings);
-            }
-        });
+    // handle errors
+    readStream.on("error", function (err) {
+        return link.send(400, err);
     });
 };
 

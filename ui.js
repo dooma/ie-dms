@@ -90,11 +90,6 @@ module.exports = function () {
             self.mappings[fieldKey] = columnIndex;
         }
 
-        // delete first line if it contains the headers
-        if ($('.headersInFirstLine', self.dom).prop('checked')) {
-            self.colums.lines.splice(0, 1);
-        }
-
         // refresh table
         self.emit('_refreshTable');
     });
@@ -105,12 +100,12 @@ module.exports = function () {
         var option = $(this).attr('data-option');
 
         // update colums data
-        self.columsData[option] = $(this).val();
+        self.columsData[option] = $(this).attr("type") !== "checkbox" ? $(this).val() : $(this).prop("checked");
 
         // and show mappings
         self.emit('_showMappings');
     });
-    
+
     // TODO remove hardcoded selectors
     $(document).on('change', 'input[name=operation]:radio', function () {
 
