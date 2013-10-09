@@ -16,6 +16,8 @@ module.exports = function (config) {
     // configure the external events
     self.on('reset', reset);
     self.on('setTemplate', setTemplate);
+    self.on('setQuery', setQuery);
+    self.on('export', startExport);
 
     // process the UI only if the configuration is present
     if (self.config.ui) {
@@ -29,9 +31,16 @@ module.exports = function (config) {
 function reset () {
     var self = this;
 
+    // common properties
     delete self.template;
+
+    // import properties
     delete self.mappings;
     delete self.columns;
+
+    // export properties
+    delete self.query;
+
     // TODO when what else
 }
 
@@ -46,13 +55,62 @@ function setTemplate (templateId) {
     self.template = JSON.parse(JSON.stringify(self.templates[templateId]));
 }
 
+function setQuery (query, options) {
+    var self = this;
+
+    self.query = query;
+    self.queryOptions = options;
+}
+
+function startExport() {
+    var self = this;
+
+    if (!self.query) {
+        alert('No data query set for export');
+        return;
+    }
+    if (!self.template) {
+        alert('No data template set for export');
+        return;
+    }
+
+    // TODO generate a token or let the user decide the name of
+    //      the export this is necessary for later reference
+
+    self.link('export', { template: self.template._id, query: self.query, options: self.queryOptions }, function(err, result) {
+
+        // TODO enhance
+
+        if (err) {
+            alert(err);
+            return;
+        }
+
+        // give it a name
+        var templateName;
+        if (self.template.options && self.template.options.label) {
+            templateName = self.template.options.label;
+            if (typeof templateName === 'object') {
+                templateName = templateName[M.getLocale()];
+            }
+        }
+        if (!templateName) {
+            templateName = self.template.name;
+        }
+
+        alert(templateName + ' export started and will be available shortly in the import inbox.');
+        return;
+    });
+}
+
 function getTemplates () {
     var self = this;
 
     var query = {};
     var options = {
         fields: {
-            _id: 1
+            _id: 1,
+            'options.label': 1
         }
     };
 
