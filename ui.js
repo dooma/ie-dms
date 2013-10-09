@@ -108,7 +108,18 @@ module.exports = function () {
         self.columsData[option] = $(this).val();
 
         // and show mappings
-        self.emit('_showMappings');
+        self.emit('_showMappings', function(err) {
+
+            if (err) {
+                alert(err);
+                return;
+            }
+
+            resetMappings.call(self);
+            self.emit('_refreshTable');
+            self.emit("_refreshFields");
+        });
+        
     });
     
     // TODO remove hardcoded selectors
@@ -174,6 +185,9 @@ function templateChangeHandler () {
 function resetMappings () {
     var self = this;
 
+    if (self.mappings) {
+        self.mappings = {};
+    }
 
 }
 
@@ -209,13 +223,12 @@ function getSelectedTemplate (templateId) {
 
 // Set template fields to DOM if page is rendered. Otherwise, it does not render templates options again.
 function refreshFields () {
-
     var self = this;
 
     if (!self.template) {
         return;
     }
-
+    
     // TODO Move to config
     var templateSel    = '.field-template',
         nameSel        = '.field-name',
@@ -351,6 +364,7 @@ function deleteFile (path, callback) {
 function showMappings (callback) {
     var self = this;
 
+    callback = callback || function () {};
     // start a waiter
     self.emit('_startWaiting');
 
@@ -362,7 +376,6 @@ function showMappings (callback) {
     }
 
     self.link('getColumns', { data: self.columsData }, function(err, columns) {
-
         // end the waiter
         self.emit('_endWaiting', 'mapping');
 
@@ -408,6 +421,8 @@ function showMappings (callback) {
         }
 
         self.$.fieldOptions = $options.children();
+
+        callback(err);
     });
 }
 
@@ -443,7 +458,7 @@ function refreshTable () {
         }
     }
 
-    if (data.length) {
+    if (data) {
         self.emit('result', null, data);
     } else {
         //TODO clear table
