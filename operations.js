@@ -102,8 +102,7 @@ exports.deleteFile = function (link) {
 };
 
 exports.getColumns = function (link) {
-setTimeout(function() {
-console.dir(link.data);
+
     if (!checkLink(link, true)) { return; }
 
     // the file path from inbox directory
@@ -117,6 +116,11 @@ console.dir(link.data);
         "SPACE"     : " "
     };
 
+    // TODO stream the file content here, do not read the entire file
+    //      1. read the first line only
+    //      2. autodetect stuff (sparators, charset)
+    //      3. continue to read lines up to the number wanted by the user
+    //      4. if headers are users, return to the client also a headers: [..] object
     // get the lines from file
     fs.readFile(path, function (err, fileContent) {
 
@@ -127,15 +131,15 @@ console.dir(link.data);
         fileContent = fileContent.toString();
 
         // how many lines?
-        var l = parseInt(link.data.linesCount) || 10;
+        var l = parseInt(link.data.lineCount) || 10;
 
         // number of lines from file
-        var linesCount = fileContent.split("\n").length;
+        var lineCount = fileContent.split("\n").length;
 
         // cannot choose a number of lines greater than
         // the number of lines from file
-        if (l > linesCount) {
-            l = linesCount;
+        if (l > lineCount) {
+            l = lineCount;
         }
 
         // separator
@@ -170,7 +174,6 @@ console.dir(link.data);
                 // set mappings obj
                 var mappings = {
                     lines: lines,
-                    linesCount: l,
                     separator: s,
                     charset: c
                 };
@@ -180,8 +183,6 @@ console.dir(link.data);
             }
         });
     });
-
-}, 500);
 };
 
 // get csv separator
