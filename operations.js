@@ -172,8 +172,12 @@ exports.getColumns = function (link) {
                 if (link.data.hasHeaders && i === 0) {
                     headers = row;
                 }
-                else {
+                // row exits, push it
+                else if (row) {
                     lines.push(row);
+                // row is null, that means that we've read the entire file
+                } else {
+                    l = i + 1;
                 }
 
                 // go to next line
@@ -189,6 +193,8 @@ exports.getColumns = function (link) {
                         separator: s,
                         // charset
                         charset: c,
+                        // how many lines
+                        lineCount: l,
                         // the headers (an array or undefined)
                         headers: headers,
                         // hasHeaders: boolean
