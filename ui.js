@@ -526,13 +526,19 @@ function reset () {
 
 function gatherInfo () {
     var self = this;
+    var info = {};
     
-    var path = self.columsData.path;
-    var template = $(self.config.ui.selectors.template).val();
-    var separator = self.columns.separator;
-    var charset = "";
+    info.path = self.columsData.path;
+    info.template = $(self.config.ui.selectors.template).val();
+    info.separator = self.columns.separator;
+    info.charset = $("[data-option=charset]").val();
+    info.headers = self.headers;
+    info.update = "";
+    info.upsert = "";
+    info.key = "";
+    info.mapping = {};
     
-    console.log(template);
+    console.dir(info);
 }
     
 return module; });
