@@ -2,6 +2,7 @@ M.wrap('github/gabipetrovay/ie-dms/dev/ui.js', function (require, module, export
 
 module.exports = function () {
     var self = this;
+    var info = {};
 
     // process UI config
     self.config.ui.selectors = self.config.ui.selectors || {};
@@ -55,7 +56,7 @@ module.exports = function () {
     });
     
     $(self.dom).on('click', self.config.ui.selectors.import, function () {
-        self.emit('gatherInfo');
+        info = gatherInfo.call(self);
     });
 
     // configure internal events
@@ -71,7 +72,6 @@ module.exports = function () {
     self.on('readInbox', readInbox);
     self.on('reset', reset);
     self.on('setTemplate', setTemplate);
-    self.on('gatherInfo', gatherInfo);
 
     // ******************************************
 
@@ -533,12 +533,27 @@ function gatherInfo () {
     info.separator = self.columns.separator;
     info.charset = $("[data-option=charset]").val();
     info.headers = self.headers;
-    info.update = "";
-    info.upsert = "";
-    info.key = "";
-    info.mapping = {};
+    info.update = $("[name=operation]:checked").val() === "update" ? true : false ;
+    info.upsert = $("[name=upsert]:checked").length ? true : false;
+    // TODO get the name of the select corresponding to the selected radio btn.
+    info.key = $("[name=mapping]:checked");
+    info.mappings = self.mappings;
     
+    // if the update option is selected get the mapping
+    if (info.update) {
+        var updateMappings = {};
+        var fields = $(".field-select");
+        for (var i = 0, l = fields.length; i < l; ++ i) {
+            var fieldVal = $(fields[i]).val();
+            if (fieldVal) {
+                // TODO verify the type of the field: if "number" add set/inc in the object
+                updateMappings[$(fields[i]).attr("name")] = { value: fieldVal };
+            }
+        }
+        info.mappings = updateMappings;
+    }
     console.dir(info);
+    return info;
 }
     
 return module; });
