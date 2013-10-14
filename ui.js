@@ -527,6 +527,7 @@ function reset () {
 function gatherInfo () {
     var self = this;
     var info = {};
+    var schema = self.template.schema;
     
     info.path = self.columsData.path;
     info.template = $(self.config.ui.selectors.template).val();
@@ -535,19 +536,31 @@ function gatherInfo () {
     info.headers = self.headers;
     info.update = $("[name=operation]:checked").val() === "update" ? true : false ;
     info.upsert = $("[name=upsert]:checked").length ? true : false;
-    // TODO get the name of the select corresponding to the selected radio btn.
-    info.key = $("[name=mapping]:checked");
+    
+    // TODO Get rid of the HARDCODED thingy (parent.parent.parent.parent.parent ... .parent :) )
+    info.key = $("[name=mapping]:checked").parent().parent().parent().find("select.field-select").attr("name");
     info.mappings = self.mappings;
     
     // if the update option is selected get the mapping
     if (info.update) {
+        
         var updateMappings = {};
         var fields = $(".field-select");
         for (var i = 0, l = fields.length; i < l; ++ i) {
+            
             var fieldVal = $(fields[i]).val();
+            
             if (fieldVal) {
-                // TODO verify the type of the field: if "number" add set/inc in the object
-                updateMappings[$(fields[i]).attr("name")] = { value: fieldVal };
+                
+                var templateKey = $(fields[i]).attr("name");
+                
+                if (schema[templateKey].type === "number") {
+                    // TODO get rid of the hardcoded jquery selector.
+                    var operator = $(fields[i]).parent().parent().find("select.update").val();
+                    updateMappings[templateKey] = { value: fieldVal, operator: operator};
+                } else {
+                    updateMappings[templateKey] = { value: fieldVal };
+                }
             }
         }
         info.mappings = updateMappings;
