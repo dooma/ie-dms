@@ -101,6 +101,19 @@ exports.deleteFile = function (link) {
     link.send(200, 'ok');
 };
 
+exports.downloadFile = function (link) {
+    
+    if (!checkLink(link, true)) { return; }
+    
+    var path = APP_DIR + '/' + link.params.inboxDir + "/" + link.data;
+    
+    if(!path) { return; }
+    
+    console.log(">>>", path);
+    
+    link.send(200, 'ok');
+};
+
 exports.getColumns = function (link) {
 
     if (!checkLink(link, true)) { return; }

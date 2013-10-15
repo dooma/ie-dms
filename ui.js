@@ -16,6 +16,7 @@ module.exports = function () {
     self.config.ui.selectors.inboxFilePath = self.config.ui.selectors.inboxFilePath || '.path';
     self.config.ui.selectors.inboxFileImport = self.config.ui.selectors.inboxFileImport || '.import';
     self.config.ui.selectors.inboxFileDelete = self.config.ui.selectors.inboxFileDelete || '.delete';
+    self.config.ui.selectors.inboxFileDownload = self.config.ui.selectors.inboxFileDownload || '.download';
     // column mapping
     self.config.ui.selectors.field = self.config.ui.selectors.field || '.field';
     self.config.ui.selectors.fields = self.config.ui.selectors.fields || '.fields';
@@ -63,6 +64,7 @@ module.exports = function () {
     self.on('_startWaiting', startWaiting);
     self.on('_endWaiting', endWaiting);
     self.on('_deleteFile', deleteFile);
+    self.on('_downloadFile', downloadFile);
     self.on('_showMappings', showMappings);
     self.on('_setTemplates', setTemplates);
     self.on('_refreshTable', refreshTable);
@@ -158,6 +160,7 @@ function readInbox () {
         }
 
         self.inbox = files;
+        console.dir(files);
 
         // no need to continue if we don't have a file container
         if (!self.$.files.length) {
@@ -313,6 +316,7 @@ function appendFile (file) {
 
     var $file = self.$.file.clone();
     var ps = self.config.ui.selectors.inboxFilePath;
+    var path = file.path;
 
     $file.find(ps).html(file.path);
     $file.on('click', self.config.ui.selectors.inboxFileImport, function() {
@@ -334,6 +338,9 @@ function appendFile (file) {
                 $thisFile.remove();
             }
         });
+    });
+    $file.on('click', self.config.ui.selectors.inboxFileDownload, function () {
+        self.emit('_downloadFile', path);
     });
     // add the new file to the dom
     self.$.files.append($file);
@@ -360,6 +367,11 @@ function setTemplates () {
 function deleteFile (path, callback) {
     var self = this;
     self.link('deleteFile', { data: path }, callback);
+}
+    
+function downloadFile (path) {
+    var self = this;
+    self.link('downloadFile', { data: path });
 }
 
 function showMappings (callback) {
