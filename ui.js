@@ -536,9 +536,7 @@ function gatherInfo () {
     info.headers = self.headers;
     info.update = $("[name=operation]:checked").val() === "update" ? true : false ;
     info.upsert = $("[name=upsert]:checked").length ? true : false;
-    
-    // TODO Get rid of the HARDCODED thingy (parent.parent.parent.parent.parent ... .parent :) )
-    info.key = $("[name=mapping]:checked").parent().parent().parent().find("select.field-select").attr("name");
+    info.key = $("[name=mapping]:checked").closest(".form-group").find("select.field-select").attr("name");
     info.mappings = self.mappings;
     
     // if the update option is selected get the mapping
@@ -555,8 +553,7 @@ function gatherInfo () {
                 var templateKey = $(fields[i]).attr("name");
                 
                 if (schema[templateKey].type === "number") {
-                    // TODO get rid of the hardcoded jquery selector.
-                    var operator = $(fields[i]).parent().parent().find("select.update").val();
+                    var operator = $(fields[i]).closest(".form-group").find("div.operator>select").val();
                     updateMappings[templateKey] = { value: fieldVal, operator: operator};
                 } else {
                     updateMappings[templateKey] = { value: fieldVal };
