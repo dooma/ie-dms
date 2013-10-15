@@ -12,6 +12,7 @@
     "operations": [
         { "file": "operations.js", "function": "readInbox" },
         { "file": "operations.js", "function": "deleteFile" },
+        { "file": "operations.js", "function": "downloadFile"},
         { "file": "operations.js", "function": "getColumns" },
         { "file": "operations.js", "function": "import" },
         { "file": "operations.js", "function": "export" }
