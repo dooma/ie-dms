@@ -101,16 +101,16 @@ exports.deleteFile = function (link) {
 
 exports.download = function (link) {
 
+    link.data = link.data.path || link.data;
+
     if (!checkLink(link, true)) { return; }
 
     var path = APP_DIR + '/' + link.params.inboxDir + "/" + link.data;
 
     if(!path) { return; }
 
-    var relPath = "../" + link.params.inboxDir + "/" + link.data;
-
     link.res.writeHead(200, {
-        "Content-disposition": "attachment;filename=\"" + relPath + "\"",
+        "Content-disposition": "attachment;filename='" + link.data + "'",
         "Content-Type": "text/csv"
     });
 

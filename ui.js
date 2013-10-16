@@ -368,10 +368,24 @@ function deleteFile (path, callback) {
     var self = this;
     self.link('deleteFile', { data: path }, callback);
 }
-    
+
 function download (path) {
+
+    // get the module
     var self = this;
-    self.link('download', { data: path });
+
+    // create a form
+    var $form = $("<form>").attr({
+        "action": "/@/" + self.miid + "/download",
+        "method": "POST"
+    });
+
+    // append some inputs
+    $form.append($("<input>").val(path).attr("name", "path"));
+
+    // submit the form
+    $form.submit();
+
 }
 
 function showMappings (callback) {
