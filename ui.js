@@ -64,7 +64,7 @@ module.exports = function () {
     self.on('_startWaiting', startWaiting);
     self.on('_endWaiting', endWaiting);
     self.on('_deleteFile', deleteFile);
-    self.on('_downloadFile', downloadFile);
+    self.on('_download', download);
     self.on('_showMappings', showMappings);
     self.on('_setTemplates', setTemplates);
     self.on('_refreshTable', refreshTable);
@@ -340,7 +340,7 @@ function appendFile (file) {
         });
     });
     $file.on('click', self.config.ui.selectors.inboxFileDownload, function () {
-        self.emit('_downloadFile', path);
+        self.emit('_download', path);
     });
     // add the new file to the dom
     self.$.files.append($file);
@@ -369,9 +369,9 @@ function deleteFile (path, callback) {
     self.link('deleteFile', { data: path }, callback);
 }
     
-function downloadFile (path) {
+function download (path) {
     var self = this;
-    self.link('downloadFile', { data: path });
+    self.link('download', { data: path });
 }
 
 function showMappings (callback) {

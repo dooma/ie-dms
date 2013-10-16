@@ -101,7 +101,7 @@ exports.deleteFile = function (link) {
     link.send(200, 'ok');
 };
 
-exports.downloadFile = function (link) {
+exports.download = function (link) {
     
     if (!checkLink(link, true)) { return; }
     
