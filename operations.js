@@ -107,9 +107,11 @@ exports.download = function (link) {
 
     if(!path) { return; }
 
+    var relPath = "../" + link.params.inboxDir + "/" + link.data;
+
     link.res.writeHead(200, {
-        "Content-disposition": "attachment;filename=" + path,
-        "Content-Type": "application/octet-stream"
+        "Content-disposition": "attachment;filename=\"" + relPath + "\"",
+        "Content-Type": "text/csv"
     });
 
     var filestream = fs.createReadStream(path);
