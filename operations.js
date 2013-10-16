@@ -100,19 +100,20 @@ exports.deleteFile = function (link) {
 };
 
 exports.download = function (link) {
-    
+
     if (!checkLink(link, true)) { return; }
-    
+
     var path = APP_DIR + '/' + link.params.inboxDir + "/" + link.data;
-    
+
     if(!path) { return; }
-    
-    link.res.setHeader('Content-disposition', 'attachment; filename=' + path);
-    
+
+    link.res.writeHead(200, {
+        "Content-disposition": "attachment;filename=" + path,
+        "Content-Type": "application/octet-stream"
+    });
+
     var filestream = fs.createReadStream(path);
     filestream.pipe(link.res);
-    
-    link.send(200, 'ok');
 };
 
 exports.getColumns = function (link) {
