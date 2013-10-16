@@ -21,8 +21,6 @@ function checkLink (link, mustHaveData) {
         return false;
     }
 
-console.log(APP_DIR + '/' + link.params.inboxDir);
-
     if (!fs.existsSync(APP_DIR + '/' + link.params.inboxDir)) {
         link.send(400, 'Inbox directory not found: ' + link.params.inboxDir);
         return false;
@@ -109,7 +107,10 @@ exports.download = function (link) {
     
     if(!path) { return; }
     
-    console.log(">>>", path);
+    link.res.setHeader('Content-disposition', 'attachment; filename=' + path);
+    
+    var filestream = fs.createReadStream(path);
+    filestream.pipe(link.res);
     
     link.send(200, 'ok');
 };
