@@ -2,7 +2,6 @@ M.wrap('github/gabipetrovay/ie-dms/dev/ui.js', function (require, module, export
 
 module.exports = function () {
     var self = this;
-    var info = {};
 
     // process UI config
     self.config.ui.selectors = self.config.ui.selectors || {};
@@ -57,7 +56,7 @@ module.exports = function () {
     });
     
     $(self.dom).on('click', self.config.ui.selectors.import, function () {
-        info = gatherInfo.call(self);
+        self.emit('importData'); 
     });
 
     // configure internal events
@@ -74,6 +73,7 @@ module.exports = function () {
     self.on('readInbox', readInbox);
     self.on('reset', reset);
     self.on('setTemplate', setTemplate);
+    self.on('importData', importData);
 
     // ******************************************
 
@@ -208,6 +208,38 @@ function setTemplate (templateId) {
     self.emit('template', self.template);
     self.emit('_refreshFields');
     self.emit('_refreshTable');
+}
+    
+function importData () {
+    var self = this;
+    
+    // getting required info
+    var info = gatherInfo.call(self);
+    
+    // calling server operation
+    self.link('import', { data: info }, function (err) {
+        
+        if (err) { 
+            $('body').append("<div class='message-popup error'><i class='icon-remove'></i> An error occurred!</div>");
+            $(".message-popup").fadeIn(300);
+            setTimeout (function () {
+                $(".message-popup").fadeOut(1000, function () {
+                    $(this).remove();
+                });
+            }, 1000);
+            return;
+        }
+        
+        // TODO handle "IMPORT SUCCESFUL" message
+        $('body').append("<div class='message-popup success'><i class='icon-ok'></i> Import successful!</div>");
+        $(".message-popup").fadeIn(300);
+        setTimeout (function () {
+            $(".message-popup").fadeOut(1000, function () {
+                $(this).remove();
+                self.emit('reset');
+            });
+        }, 1000);
+    });
 }
 
 function getSelectedTemplate (templateId) {
@@ -588,7 +620,7 @@ function gatherInfo () {
         }
         info.mappings = updateMappings;
     }
-    console.dir(info);
+    
     return info;
 }
     

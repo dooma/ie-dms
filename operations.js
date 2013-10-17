@@ -1,5 +1,4 @@
-var model;
-//var model = require('./model.js');
+var model = require('./model.js');
 var fs = require('fs');
 var modm = require('modm');
 var ObjectId = modm.ObjectId;
@@ -37,7 +36,10 @@ exports.import = function (link) {
         link.send(400, JSON.stringify({ error: 'Missing data' }));
         return;
     }
-
+    
+    // TODO remove the following line, it is just for TESTING
+    link.send(200, 'ok');
+    
     model.importData(link.data, function (error) {
         if (error) {
             link.send(400, JSON.stringify({error: error}));
@@ -49,6 +51,11 @@ exports.import = function (link) {
 };
 
 exports.export = function (link) {
+    
+    if (!checkLink(link, true)) { return; }
+    
+    // TODO handle export opertaion
+    
     link.send(200, 'OK');
 };
 
