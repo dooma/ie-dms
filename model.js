@@ -64,6 +64,21 @@ exports.getOptions = function (options, callback) {
     callback(null, tmp);
 };
 
+/*
+ * Insert the import fixed list into database
+ * */
+exports.insertImportFixedList = function (listToInsert, callback) {
+    
+    // set default value for callback
+    callback = callback || function () {};
+    
+    // get collection
+    var collection = model("d_lists", schema);
+    
+    // insert the list
+    collection.insert(listToInsert, callback);
+}
+
 // Import data operation
 exports.importData = function (data, callback) {
    var collection = model('d_templates', schema);

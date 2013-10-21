@@ -37,16 +37,98 @@ exports.import = function (link) {
         return;
     }
     
-    // TODO remove the following line, it is just for TESTING
-    link.send(200, 'ok');
+    /*
+     { path: 'sample_customers.csv',
+          template: '52613bc9a8026a05c537ff0f',
+          separator: 'SEMICOLON',
+          charset: 'cp-1252',
+          update: false,
+          upsert: false,
+          mappings: { 'dd.bg': 3, 'dd.branch': 1, company: 10 } }
+          TODO header
+    */
     
-    model.importData(link.data, function (error) {
-        if (error) {
-            link.send(400, JSON.stringify({error: error}));
+    // TODO Data check
+    
+    // separators
+    var separators = {
+        "COMMA"     : ",",
+        "SEMICOLON" : ";",
+        "TAB"       : "\t",
+        "SPACE"     : " "
+    };
+    
+    // generate a Mongo object id that will be used for _id and _li fields
+    var idAndLi = new ObjectId();
+    
+    // create the fixed list
+    var fixedList = {
+        _id:        idAndLi,
+        _li:        idAndLi,
+        name:       link.data.path,
+        template:   link.data.template,
+        type:       "fixed"
+    };
+    
+    model.insertImportFixedList (fixedList, function (err, insertedList) {
+        if (err) {
+            link.send(400, err);
             return;
         }
+        
+        // the file path from inbox directory
+        var path = APP_DIR + '/' + link.params.inboxDir + '/' + link.data.path;
+      
+        // read each line from the csv file
+        // set parse options
+        var options = {
+            delimiter: separators[link.data.separator] || link.data.separator,
+            charset: link.data.charset
+        };
 
-        link.send(200, JSON.stringify({success: 'Data received'}));
+        var lines = [];
+        var headers;
+        var i = 0;
+        
+        // parse the file
+        CSV.parse(path, options, function (err, row, next) {
+
+            // handle error
+            if (err) { return link.send(400, err); }
+
+            // push line or set headers
+            if (link.data.hasHeaders && ++i === 1) {
+                headers = row;
+            }
+            // row exits, push it
+            else if (row) {
+                lines.push(row);
+            // row is null, that means that we've read the entire file
+            } else {
+                
+                // convert lines to real items
+                for (var i = 0; i < lines.length; ++i) {
+                    for (var ii = 0; ii < lines[i].length; ++ii) {
+                        // TODO
+                        //  - set _li: [listInserted._id]
+                    }
+                }
+                
+                model.importData(link.data, function (error) {
+                    
+                    if (error) {
+                        link.send(400, JSON.stringify({error: error}));
+                        return;
+                    }
+        
+                    link.send(200, JSON.stringify({success: 'Data received'}));
+                });
+                
+                return;
+            }
+            
+            next();
+        });
     });
 };
 
@@ -85,8 +167,6 @@ setTimeout(function() {
 exports.deleteFile = function (link) {
 
     if (!checkLink(link, true)) { return; }
-
-    //console.log(">>> " + link.data);
 
     var path = link.data;
 

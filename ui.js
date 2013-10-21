@@ -591,7 +591,7 @@ function gatherInfo () {
     info.template = $(self.config.ui.selectors.template).val();
     info.separator = self.columns.separator;
     info.charset = $("[data-option=charset]").val();
-    info.headers = self.headers;
+    info.headers = self.columns.hasHeaders;
     info.update = $("[name=operation]:checked").val() === "update" ? true : false ;
     info.upsert = $("[name=upsert]:checked").length ? true : false;
     info.key = $("[name=mapping]:checked").closest(".form-group").find("select.field-select").attr("name");
@@ -620,7 +620,6 @@ function gatherInfo () {
         }
         info.mappings = updateMappings;
     }
-    
     return info;
 }
     
