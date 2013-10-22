@@ -8,7 +8,6 @@ module.exports = function () {
     self.config.ui.selectors.waiter = self.config.ui.selectors.waiter || '.waiter';
     self.config.ui.selectors.inboxPage = self.config.ui.selectors.inboxPage || '#inbox';
     self.config.ui.selectors.mappingPage = self.config.ui.selectors.mappingPage || '#mapping';
-    self.config.ui.selectors.import = self.config.ui.selectors.import || '.import-btn';
     // file list
     self.config.ui.selectors.file = self.config.ui.selectors.file || '.file';
     self.config.ui.selectors.files = self.config.ui.selectors.files || '.files';
@@ -55,8 +54,8 @@ module.exports = function () {
         self.emit('reset');
     });
     
-    $(self.dom).on('click', self.config.ui.selectors.import, function () {
-        self.emit('importData'); 
+    $(self.dom).on('click', self.config.ui.selectors.mappingImport, function () {
+        self.emit('import');
     });
 
     // configure internal events
@@ -73,7 +72,7 @@ module.exports = function () {
     self.on('readInbox', readInbox);
     self.on('reset', reset);
     self.on('setTemplate', setTemplate);
-    self.on('importData', importData);
+    self.on('import', importData);
 
     // ******************************************
 
