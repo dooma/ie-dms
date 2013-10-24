@@ -76,8 +76,46 @@ function startExport() {
 
     // TODO generate a token or let the user decide the name of
     //      the export this is necessary for later reference
-
-    self.link('export', { template: self.template._id, query: self.query, options: self.queryOptions }, function(err, result) {
+    
+    var columns = [];
+    
+    for (var field in self.template.schema) {
+        
+        // Skip keys that begin with "_"
+        if (field.toString().charAt(0) === "_") continue;
+        
+        if (!("hidden" in self.template.schema[field])) {
+            columns.push(field);
+        }
+    }
+    
+    var templateName = "";
+    
+    if (typeof self.template.options.label === "object") {
+        templateName += self.template.options.label[M.getLocale()];
+    } else {
+        templateName += self.template.options.label;
+    }
+    
+    if (!templateName) {
+        templateName = self.template.name;
+    }
+    
+    var date = new Date().toISOString().replace(/[^\d]/g, '');
+    var timestamp = date.substr(0, 8) + '_' + date.substr(8, 4);
+    
+    var options = {
+        data: {
+            template: self.template._id,
+            query: self.query,
+            options: self.queryOptions,
+            columns: columns,
+            separator: ";",
+            filename: "export_" + templateName.toLowerCase().replace(" ", "_") + "_" + timestamp
+        }
+    }
+    
+    self.link('export', options, function(err, result) {
 
         // TODO enhance
 

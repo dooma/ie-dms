@@ -45,7 +45,7 @@ exports.import = function (link) {
             link.send(400, JSON.stringify({error: error}));
             return;
         }
-
+        
         link.send(200, JSON.stringify({success: 'Data received'}));
     });
 };
@@ -54,7 +54,45 @@ exports.export = function (link) {
     
     if (!checkLink(link, true)) { return; }
     
-    // TODO handle export opertaion
+    try {
+        var customRequst = {
+            role: link.session.crudRole,
+            templateId: link.data.template,
+            query: link.data.query,
+            data: {},
+            options: {},
+            method: 'read'
+        };
+    } catch (err) {
+        return;
+    }
+
+    function createTransform () {
+        return function (item) {
+            var line = '';
+            
+            for (var column in link.data.columns) {
+                var value = findValue(item, link.data.columns[column]);
+                value = value.toString().indexOf(link.data.separator) ? '"' + value + '"' : value;
+                
+                line += value + link.data.separator;
+            }
+            
+            return line.slice(0, -1) + "\n";
+        };
+    }
+    
+    M.emit('crud.read', customRequst, function(err, resultCursor, resultCount) {
+        // TODO compute default file name also on server
+        var filename = link.data.filename || "export";
+        if (filename.substr(-4) !== '.csv') {
+            filename += '.csv';
+        }
+        // TODO create websafe name
+        var file = fs.createWriteStream(APP_DIR + '/' + link.params.inboxDir + "/" + filename);
+        var stream = resultCursor.stream({ transform: createTransform() });
+        stream.pipe(file);
+    });
     
     link.send(200, 'OK');
 };
@@ -148,6 +186,7 @@ exports.getColumns = function (link) {
 
     // on data
     readStream.on("data", function (chunk) {
+        debugger;
         // add chunk to firstLine
         firstLine += chunk;
 
@@ -237,6 +276,24 @@ exports.getColumns = function (link) {
         return link.send(400, err);
     });
 };
+
+// private functions
+
+function findValue (parent, dotNot) {
+
+    if (!dotNot) return undefined;
+
+    var splits = dotNot.split(".");
+    var value;
+
+    for (var i = 0; i < splits.length; i++) {
+        value = parent[splits[i]];
+        if (value === undefined || value === null) return '';
+        if (typeof value === "object") parent = value;
+    }
+
+    return value;
+}
 
 // get csv separator
 // TODO Handle quoted fields
