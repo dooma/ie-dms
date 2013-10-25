@@ -38,7 +38,7 @@ exports.import = function (link) {
     }
     
     // TODO remove the following line, it is just for TESTING
-    link.send(200, 'ok');
+    //link.send(200, 'ok');
     
     model.importData(link.data, function (error) {
         if (error) {
@@ -164,7 +164,7 @@ exports.download = function (link) {
 };
 
 exports.getColumns = function (link) {
-
+    
     if (!checkLink(link, true)) { return; }
 
     // the file path from inbox directory
@@ -183,10 +183,10 @@ exports.getColumns = function (link) {
 
     // initialize first line as empty string
     var firstLine = "";
-
+    
     // on data
     readStream.on("data", function (chunk) {
-        debugger;
+        
         // add chunk to firstLine
         firstLine += chunk;
 
@@ -227,7 +227,7 @@ exports.getColumns = function (link) {
 
             // parse the file
             CSV.parse(path, options, function (err, row, next) {
-
+                
                 // handle error
                 if (err) { return link.send(400, err); }
 
@@ -240,7 +240,7 @@ exports.getColumns = function (link) {
                     lines.push(row);
                 // row is null, that means that we've read the entire file
                 } else {
-                    l = i + 1;
+                    l = i;
                 }
 
                 // go to next line
@@ -270,7 +270,13 @@ exports.getColumns = function (link) {
             });
         }
     });
-
+    
+    readStream.on("end", function () {
+        if (firstLine === "") {
+            return link.send(400, "Empty file");
+        }
+    });
+    
     // handle errors
     readStream.on("error", function (err) {
         return link.send(400, err);
