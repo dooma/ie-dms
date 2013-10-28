@@ -2,7 +2,10 @@ M.wrap('github/gabipetrovay/ie-dms/dev/ui.js', function (require, module, export
 
 module.exports = function () {
     var self = this;
-
+    
+    // no inbox
+    self.config.noInbox = self.config.noInbox || false;
+    
     // process UI config
     self.config.ui.selectors = self.config.ui.selectors || {};
     self.config.ui.selectors.waiter = self.config.ui.selectors.waiter || '.waiter';
@@ -77,7 +80,9 @@ module.exports = function () {
     // ******************************************
 
     // read the inbox
-    self.emit('readInbox');
+    if (!self.config.noInbox) {
+        self.emit('readInbox');
+    }
 
     // detect field select change
     // TODO Why this doesn't work?
