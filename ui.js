@@ -329,7 +329,8 @@ function refreshFields () {
         $field.find(nameSel).text(fields[i].label);
 
         // append options
-        $(fieldSelectSel, $field).append(self.$.fieldOptions.clone()).attr('name', fields[i].key);
+        if (self.$.fieldOptions) 
+            $(fieldSelectSel, $field).append(self.$.fieldOptions.clone()).attr('name', fields[i].key);
 
         if (fields[i].type === 'number') {
             $('.operator', $field).removeClass('hide');
