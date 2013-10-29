@@ -1,4 +1,4 @@
-M.wrap('github/gabipetrovay/ie-dms/dev/ui.js', function (require, module, exports) {
+M.wrap('github/gabipetrovay/ie-dms/dev/ui_import.js', function (require, module, exports) {
 
 module.exports = function () {
     var self = this;
@@ -7,57 +7,57 @@ module.exports = function () {
     self.config.noInbox = self.config.noInbox || false;
     
     // process UI config
-    self.config.ui.selectors = self.config.ui.selectors || {};
-    self.config.ui.selectors.waiter = self.config.ui.selectors.waiter || '.waiter';
-    self.config.ui.selectors.inboxPage = self.config.ui.selectors.inboxPage || '#inbox';
-    self.config.ui.selectors.mappingPage = self.config.ui.selectors.mappingPage || '#mapping';
+    self.config.import.ui.selectors = self.config.import.ui.selectors || {};
+    self.config.import.ui.selectors.waiter = self.config.import.ui.selectors.waiter || '.waiter';
+    self.config.import.ui.selectors.inboxPage = self.config.import.ui.selectors.inboxPage || '#inbox';
+    self.config.import.ui.selectors.mappingPage = self.config.import.ui.selectors.mappingPage || '#mapping';
     // file list
-    self.config.ui.selectors.file = self.config.ui.selectors.file || '.file';
-    self.config.ui.selectors.files = self.config.ui.selectors.files || '.files';
-    self.config.ui.selectors.inboxFilePath = self.config.ui.selectors.inboxFilePath || '.path';
-    self.config.ui.selectors.inboxFileImport = self.config.ui.selectors.inboxFileImport || '.import';
-    self.config.ui.selectors.inboxFileDelete = self.config.ui.selectors.inboxFileDelete || '.delete';
-    self.config.ui.selectors.inboxFileDownload = self.config.ui.selectors.inboxFileDownload || '.download';
+    self.config.import.ui.selectors.file = self.config.import.ui.selectors.file || '.file';
+    self.config.import.ui.selectors.files = self.config.import.ui.selectors.files || '.files';
+    self.config.import.ui.selectors.inboxFilePath = self.config.import.ui.selectors.inboxFilePath || '.path';
+    self.config.import.ui.selectors.inboxFileImport = self.config.import.ui.selectors.inboxFileImport || '.import';
+    self.config.import.ui.selectors.inboxFileDelete = self.config.import.ui.selectors.inboxFileDelete || '.delete';
+    self.config.import.ui.selectors.inboxFileDownload = self.config.import.ui.selectors.inboxFileDownload || '.download';
     // column mapping
-    self.config.ui.selectors.field = self.config.ui.selectors.field || '.field';
-    self.config.ui.selectors.fields = self.config.ui.selectors.fields || '.fields';
-    self.config.ui.selectors.template = self.config.ui.selectors.template || '.template';
-    self.config.ui.selectors.mappingPath = self.config.ui.selectors.mappingPath || '.path';
-    self.config.ui.selectors.mappingBack = self.config.ui.selectors.mappingBack || '.back';
-    self.config.ui.selectors.mappingImport = self.config.ui.selectors.mappingImport || '.import';
+    self.config.import.ui.selectors.field = self.config.import.ui.selectors.field || '.field';
+    self.config.import.ui.selectors.fields = self.config.import.ui.selectors.fields || '.fields';
+    self.config.import.ui.selectors.template = self.config.import.ui.selectors.template || '.template';
+    self.config.import.ui.selectors.mappingPath = self.config.import.ui.selectors.mappingPath || '.path';
+    self.config.import.ui.selectors.mappingBack = self.config.import.ui.selectors.mappingBack || '.back';
+    self.config.import.ui.selectors.mappingImport = self.config.import.ui.selectors.mappingImport || '.import';
 
     // the waiter
-    self.$.waiter = $(self.config.ui.selectors.waiter, self.dom);
+    self.$.waiter = $(self.config.import.ui.selectors.waiter, self.dom);
 
     // the pages
     self.$.pages = {};
-    self.$.pages.inbox = $(self.config.ui.selectors.inboxPage, self.dom);
-    self.$.pages.mapping = $(self.config.ui.selectors.mappingPage, self.dom);
+    self.$.pages.inbox = $(self.config.import.ui.selectors.inboxPage, self.dom);
+    self.$.pages.mapping = $(self.config.import.ui.selectors.mappingPage, self.dom);
 
     // the file template
-    self.$.file = $(self.config.ui.selectors.file, self.dom).detach();
+    self.$.file = $(self.config.import.ui.selectors.file, self.dom).detach();
     // the file container
-    self.$.files = $(self.config.ui.selectors.files, self.dom);
+    self.$.files = $(self.config.import.ui.selectors.files, self.dom);
 
     // the field template
-    self.$.field = $(self.config.ui.selectors.field, self.dom).detach();
+    self.$.field = $(self.config.import.ui.selectors.field, self.dom).detach();
     // the field container
-    self.$.fields = $(self.config.ui.selectors.fields, self.dom);
+    self.$.fields = $(self.config.import.ui.selectors.fields, self.dom);
 
     // field template
     self.$.fieldTemplate = $('.field-template', self.dom);
 
     // the template select
-    self.$.select = $(self.config.ui.selectors.template, self.dom);
+    self.$.select = $(self.config.import.ui.selectors.template, self.dom);
 
     // columsData cache
     self.columsData = {};
 
-    $(self.dom).on('click', self.config.ui.selectors.mappingBack, function() {
+    $(self.dom).on('click', self.config.import.ui.selectors.mappingBack, function() {
         self.emit('reset');
     });
     
-    $(self.dom).on('click', self.config.ui.selectors.mappingImport, function () {
+    $(self.dom).on('click', self.config.import.ui.selectors.mappingImport, function () {
         self.emit('import');
     });
 
@@ -185,7 +185,7 @@ function templateChangeHandler () {
     var self = this;
 
     $(self.dom).off('change');
-    $(self.dom).on('change', self.config.ui.selectors.template, function () {
+    $(self.dom).on('change', self.config.import.ui.selectors.template, function () {
         self.emit('setTemplate', $(this).val());
     });
 }
@@ -352,18 +352,18 @@ function appendFile (file) {
     var self = this;
 
     var $file = self.$.file.clone();
-    var ps = self.config.ui.selectors.inboxFilePath;
+    var ps = self.config.import.ui.selectors.inboxFilePath;
     var path = file.path;
 
     $file.find(ps).html(file.path);
-    $file.on('click', self.config.ui.selectors.inboxFileImport, function() {
+    $file.on('click', self.config.import.ui.selectors.inboxFileImport, function() {
         // save path in colums data
-        self.columsData.path = $(this).parents(self.config.ui.selectors.file).find(ps).text();
+        self.columsData.path = $(this).parents(self.config.import.ui.selectors.file).find(ps).text();
         // and show mappings
         self.emit('_showMappings');
     });
-    $file.on('click', self.config.ui.selectors.inboxFileDelete, function() {
-        var $thisFile = $(this).parents(self.config.ui.selectors.file);
+    $file.on('click', self.config.import.ui.selectors.inboxFileDelete, function() {
+        var $thisFile = $(this).parents(self.config.import.ui.selectors.file);
         // only hide the file
         $thisFile.hide();
         // trigger a file deletion operations
@@ -376,7 +376,7 @@ function appendFile (file) {
             }
         });
     });
-    $file.on('click', self.config.ui.selectors.inboxFileDownload, function () {
+    $file.on('click', self.config.import.ui.selectors.inboxFileDownload, function () {
         self.emit('_download', path);
     });
     // add the new file to the dom
@@ -386,7 +386,7 @@ function appendFile (file) {
 function setTemplates () {
     var self = this;
 
-    var selectElem = self.config.ui.selectors.template;
+    var selectElem = self.config.import.ui.selectors.template;
     var $options = $('<div>');
 
     for (var templateId in self.templates) {
@@ -432,7 +432,7 @@ function showMappings (callback) {
     // start a waiter
     self.emit('_startWaiting');
 
-    var $pathLabel = self.$.pages.mapping.find(self.config.ui.selectors.mappingPath);
+    var $pathLabel = self.$.pages.mapping.find(self.config.import.ui.selectors.mappingPath);
     if ($pathLabel.prop('tagName') === 'INPUT') {
         $pathLabel.val(self.columsData.path);
     } else {
@@ -561,7 +561,7 @@ function reset () {
     var self = this;
 
     // remove the template selection
-    $(self.config.ui.selectors.template, self.dom).val(null);
+    $(self.config.import.ui.selectors.template, self.dom).val(null);
 
     // hide mapping fields
     $('.mapping-fields').hide();
@@ -593,7 +593,7 @@ function gatherInfo () {
     var schema = self.template.schema;
     
     info.path = self.columsData.path;
-    info.template = $(self.config.ui.selectors.template).val();
+    info.template = $(self.config.import.ui.selectors.template).val();
     info.separator = self.columns.separator;
     info.charset = $("[data-option=charset]").val();
     info.headers = self.headers;

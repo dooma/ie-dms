@@ -1,6 +1,7 @@
 M.wrap('github/gabipetrovay/ie-dms/dev/ie.js', function (require, module, exports) {
 
-var ui = require('./ui');
+var ui_export = require('./ui_export');
+var ui_import = require('./ui_import');
 var Bind = require('github/jillix/bind');
 var Events = require('github/jillix/events');
 
@@ -19,9 +20,14 @@ module.exports = function (config) {
     self.on('setQuery', setQuery);
     self.on('export', startExport);
 
-    // process the UI only if the configuration is present
-    if (self.config.ui) {
-        ui.call(self);
+    // process the export UI only if the configuration is present
+    if (self.config.export.ui) {
+        ui_export.call(self);
+    }
+    
+    // process the import UI only if the configuration is present
+    if (self.config.import.ui) {
+        ui_import.call(self);
     }
 
     // start by getting all the templates
