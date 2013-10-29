@@ -21,12 +21,12 @@ module.exports = function (config) {
     self.on('export', startExport);
 
     // process the export UI only if the configuration is present
-    if (self.config.export.ui) {
+    if (self.config.export && self.config.export.ui) {
         ui_export.call(self);
     }
     
     // process the import UI only if the configuration is present
-    if (self.config.import.ui) {
+    if (self.config.import && self.config.import.ui) {
         ui_import.call(self);
     }
 
