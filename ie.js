@@ -11,6 +11,7 @@ module.exports = function (config) {
     self.config = config;
     self.inbox = [];
     self.$ = {};
+    self.config.binds = self.config.binds || [];
 
     Events.call(self, config);
 
@@ -23,11 +24,21 @@ module.exports = function (config) {
     // process the export UI only if the configuration is present
     if (self.config.export && self.config.export.ui) {
         ui_export.call(self);
+        
+        // run the binds
+        for (var i = 0; i < self.config.binds.length; ++i) {
+            Bind.call(self, self.config.binds[i]);
+        } 
     }
     
     // process the import UI only if the configuration is present
     if (self.config.import && self.config.import.ui) {
         ui_import.call(self);
+        
+        // run the binds
+        for (var i = 0; i < self.config.binds.length; ++i) {
+            Bind.call(self, self.config.binds[i]);
+        } 
     }
 
     // start by getting all the templates
@@ -70,7 +81,7 @@ function setQuery (query, options) {
 
 function startExport() {
     var self = this;
-
+    
     if (!self.query) {
         alert('No data query set for export');
         return;
