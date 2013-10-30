@@ -210,6 +210,7 @@ function getTemplates () {
 
         // and emit some events
         self.emit('_setTemplates');
+        self.emit('ready');
         return;
     });
 }
