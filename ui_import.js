@@ -24,7 +24,7 @@ module.exports = function () {
     self.config.import.ui.selectors.template = self.config.import.ui.selectors.template || '.template';
     self.config.import.ui.selectors.mappingPath = self.config.import.ui.selectors.mappingPath || '.path';
     self.config.import.ui.selectors.mappingBack = self.config.import.ui.selectors.mappingBack || '.back';
-    self.config.import.ui.selectors.mappingImport = self.config.import.ui.selectors.mappingImport || '.import';
+    self.config.import.ui.selectors.mappingImport = self.config.import.ui.selectors.mappingImport || '.import-btn';
 
     // the waiter
     self.$.waiter = $(self.config.import.ui.selectors.waiter, self.dom);

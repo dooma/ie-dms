@@ -105,6 +105,9 @@ exports.export = function (link) {
         }
         var stream = resultCursor.stream({ transform: createTransform() });
         stream.pipe(file);
+        stream.on('end', function () {
+            M.emit('exportFinished');
+        });
     });
     
     link.send(200, 'OK');
