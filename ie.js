@@ -139,7 +139,7 @@ function startExport() {
             template: self.template._id,
             query: self.query,
             options: self.queryOptions,
-            hasHearders: self.export.headers || false,
+            hasHeaders: self.export.headers || false,
             columns: columns,
             separator: separators[self.export.separator]  || ";",
             filename: self.export.filename || "export_" + templateName.toLowerCase().replace(" ", "_") + "_" + timestamp

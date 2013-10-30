@@ -91,6 +91,18 @@ exports.export = function (link) {
         // TODO create websafe name
         var file = fs.createWriteStream(APP_DIR + '/' + link.params.inboxDir + "/" + filename);
         
+        console.dir(link.data);
+        
+        // write headers
+        if (link.data.hasHeaders) {
+            var headers = "";
+            console.log(">>>>>>>>>>>>>>>>>>>>");
+            for (var i = 0, l = link.data.columns.length; i < l; ++ i) {
+                headers += link.data.columns[i] + link.data.separator;
+            }
+            console.log(headers);
+            file.write(headers.slice(0, -1) + "\n");
+        }
         var stream = resultCursor.stream({ transform: createTransform() });
         stream.pipe(file);
     });
