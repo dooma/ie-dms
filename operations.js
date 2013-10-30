@@ -73,7 +73,7 @@ exports.export = function (link) {
             
             for (var column in link.data.columns) {
                 var value = findValue(item, link.data.columns[column]);
-                value = value.toString().indexOf(link.data.separator) ? '"' + value + '"' : value;
+                value = value.toString().indexOf(link.data.separator) !== -1? '"' + value + '"' : value;
                 
                 line += value + link.data.separator;
             }
@@ -90,6 +90,7 @@ exports.export = function (link) {
         }
         // TODO create websafe name
         var file = fs.createWriteStream(APP_DIR + '/' + link.params.inboxDir + "/" + filename);
+        
         var stream = resultCursor.stream({ transform: createTransform() });
         stream.pipe(file);
     });

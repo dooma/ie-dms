@@ -82,6 +82,8 @@ function setQuery (query, options) {
 function startExport() {
     var self = this;
     
+    self.export = self.export || {};
+    
     if (!self.query) {
         alert('No data query set for export');
         return;
@@ -96,13 +98,17 @@ function startExport() {
     
     var columns = [];
     
-    for (var field in self.template.schema) {
-        
-        // Skip keys that begin with "_"
-        if (field.toString().charAt(0) === "_") continue;
-        
-        if (!("hidden" in self.template.schema[field])) {
-            columns.push(field);
+    if (self.export.columns) {
+        columns = self.export.columns;
+    } else {
+        for (var field in self.template.schema) {
+            
+            // Skip keys that begin with "_"
+            if (field.toString().charAt(0) === "_") continue;
+            
+            if (!("hidden" in self.template.schema[field])) {
+                columns.push(field);
+            }
         }
     }
     
@@ -121,14 +127,22 @@ function startExport() {
     var date = new Date().toISOString().replace(/[^\d]/g, '');
     var timestamp = date.substr(0, 8) + '_' + date.substr(8, 4);
     
+    var separators = {
+        "COMMA": ",",
+        "SEMICOLON": ";",
+        "TAB": "\t",
+        "SPACE": " "
+    };
+    
     var options = {
         data: {
             template: self.template._id,
             query: self.query,
             options: self.queryOptions,
+            hasHearders: self.export.headers || false,
             columns: columns,
-            separator: ";",
-            filename: "export_" + templateName.toLowerCase().replace(" ", "_") + "_" + timestamp
+            separator: separators[self.export.separator]  || ";",
+            filename: self.export.filename || "export_" + templateName.toLowerCase().replace(" ", "_") + "_" + timestamp
         }
     }
     
