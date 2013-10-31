@@ -26,7 +26,7 @@ module.exports = function () {
     self.config['import'].ui.selectors.mappingBack = self.config['import'].ui.selectors.mappingBack || '.back';
     self.config['import'].ui.selectors.templateSel = self.config['import'].ui.selectors.templateSel || '.field-template';
     self.config['import'].ui.selectors.nameSel = self.config['import'].ui.selectors.nameSel || '.field-name';
-    self.config['import'].ui.selectors.fieldSelectSel || self.config['import'].ui.selectors.fieldSelectSel || '.field-select';
+    self.config['import'].ui.selectors.fieldSelectSel = self.config['import'].ui.selectors.fieldSelectSel || '.field-select';
     self.config['import'].ui.selectors.mappingImport = self.config['import'].ui.selectors.mappingImport || '.import-btn';
     self.config['import'].ui.selectors.fieldRequired = self.config['import'].ui.selectors.fieldRequired || '.required';
     
@@ -54,8 +54,8 @@ module.exports = function () {
     // the template select
     self.$.select = $(self.config['import'].ui.selectors.template, self.dom);
 
-    // columsData cache
-    self.columsData = {};
+    // columnData cache
+    self.columnData = {};
 
     $(self.dom).on('click', self.config['import'].ui.selectors.mappingBack, function() {
         self.emit('reset');
@@ -115,8 +115,8 @@ module.exports = function () {
         // get option name
         var option = $(this).attr('data-option');
 
-        // update colums data
-        self.columsData[option] = $(this).attr("type") !== "checkbox" ? $(this).val() : $(this).prop("checked");
+        // update column data
+        self.columnData[option] = $(this).attr("type") !== "checkbox" ? $(this).val() : $(this).prop("checked");
 
         // and show mappings
         self.emit('_showMappings', function(err) {
@@ -341,9 +341,10 @@ function refreshFields () {
         }
         
         // append options
-        if (self.$.fieldOptions) 
+        if (self.$.fieldOptions) {
             $(fieldSelectSel, $field).append(self.$.fieldOptions.clone()).attr('name', fields[i].key);
-
+        }
+        
         if (fields[i].type === 'number') {
             $('.operator', $field).removeClass('hide');
         } else {
@@ -369,8 +370,8 @@ function appendFile (file) {
 
     $file.find(ps).html(file.path);
     $file.on('click', self.config['import'].ui.selectors.inboxFileImport, function() {
-        // save path in colums data
-        self.columsData.path = $(this).parents(self.config['import'].ui.selectors.file).find(ps).text();
+        // save path in column data
+        self.columnData.path = $(this).parents(self.config['import'].ui.selectors.file).find(ps).text();
         // and show mappings
         self.emit('_showMappings');
     });
@@ -446,12 +447,12 @@ function showMappings (callback) {
 
     var $pathLabel = self.$.pages.mapping.find(self.config['import'].ui.selectors.mappingPath);
     if ($pathLabel.prop('tagName') === 'INPUT') {
-        $pathLabel.val(self.columsData.path);
+        $pathLabel.val(self.columnData.path);
     } else {
-        $pathLabel.text(self.columsData.path);
+        $pathLabel.text(self.columnData.path);
     }
 
-    self.link('getColumns', { data: self.columsData }, function(err, columns) {
+    self.link('getColumns', { data: self.columnData }, function(err, columns) {
         // end the waiter
         self.emit('_endWaiting', 'mapping');
 
@@ -491,7 +492,11 @@ function showMappings (callback) {
             // and set its value to the field key
             $option.attr('value', j);
             // and the label
-            $option.text('Column ' + (j + 1) + (firstLine[j] ? ' (' + firstLine[j] + ')' : ''));
+            if (self.columns.hasHeaders) {
+                $option.text('Column ' + (j + 1) + (self.columns.headers[j] ? ' (' + self.columns.headers[j] + ')' : ''));
+            } else {
+                $option.text('Column ' + (j + 1) + (firstLine[j] ? ' (' + firstLine[j] + ')' : ''));
+            }
             // and finally, push it
             $options.append($option);
         }
@@ -586,8 +591,8 @@ function reset () {
     //      Here we will call then clearTemplate
     $('.sample-table', self.dom).find('tbody, thead').empty();
 
-    // colums data is cleaned up
-    self.columsData = {};
+    // column data is cleaned up
+    self.columnData = {};
 
     self.$.pages['mapping'].hide();
     self.$.pages['inbox'].show();
@@ -604,15 +609,15 @@ function gatherInfo () {
     var info = {};
     var schema = self.template.schema;
     
-    info.path = self.columsData.path;
+    info.path = self.columnData.path;
     info.template = $(self.config['import'].ui.selectors.template).val();
-    info.separator = self.columns.separator;
-    info.charset = $("[data-option=charset]").val();
-    info.headers = self.headers;
+    info.separator = self.columnData.separator || "COMMA";
+    info.charset = self.columnData.charset || "ascii";
+    info.headers = self.columnData.hasHeaders || false;
     info.update = $("[name=operation]:checked").val() === "update" ? true : false ;
     info.upsert = $("[name=upsert]:checked").length ? true : false;
-    info.key = $("[name=mapping]:checked").closest(".form-group").find("select.field-select").attr("name");
-    info.mappings = self.mappings;
+    info.key = $("[name=mapping]:checked").closest(".form-group").find("select.field-select").attr("name") || "";
+    info.mappings = self.mappings || {};
     
     // if the update option is selected get the mapping
     if (info.update) {
@@ -624,7 +629,6 @@ function gatherInfo () {
             var fieldVal = $(fields[i]).val();
             
             if (fieldVal) {
-                
                 var templateKey = $(fields[i]).attr("name");
                 
                 if (schema[templateKey].type === "number") {

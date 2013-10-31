@@ -22,7 +22,7 @@ module.exports = function (config) {
     self.on('export', startExport);
 
     // process the export UI only if the configuration is present
-    if (self.config.export && self.config.export.ui) {
+    if (self.config['export'] && self.config['export'].ui) {
         ui_export.call(self);
         
         // run the binds
@@ -82,7 +82,7 @@ function setQuery (query, options) {
 function startExport() {
     var self = this;
     
-    self.export = self.export || {};
+    self['export'] = self['export'] || {};
     
     if (!self.query) {
         alert('No data query set for export');
@@ -98,8 +98,8 @@ function startExport() {
     
     var columns = [];
     
-    if (self.export.columns) {
-        columns = self.export.columns;
+    if (self['export'].columns) {
+        columns = self['export'].columns;
     } else {
         for (var field in self.template.schema) {
             
@@ -158,11 +158,11 @@ function startExport() {
             template: self.template._id,
             query: self.query,
             options: self.queryOptions,
-            hasHeaders: self.export.headers || false,
+            hasHeaders: self['export'].headers || false,
             columns: columns,
             labels: labels,
-            separator: separators[self.export.separator]  || ";",
-            filename: self.export.filename || "export_" + templateName.toLowerCase().replace(" ", "_") + "_" + timestamp
+            separator: separators[self['export'].separator]  || ";",
+            filename: self['export'].filename || "export_" + templateName.toLowerCase().replace(" ", "_") + "_" + timestamp
         }
     }
     

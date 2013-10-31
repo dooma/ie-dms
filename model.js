@@ -63,13 +63,3 @@ exports.getOptions = function (options, callback) {
 
     callback(null, tmp);
 };
-
-// Import data operation
-exports.importData = function (data, callback) {
-   var collection = model('d_templates', schema);
-   collection.find({name: data.template}, function (error, cursor) {
-       cursor.toArray(function (error, docs) {
-           console.log(docs);
-       })
-   });
-};

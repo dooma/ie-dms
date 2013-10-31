@@ -31,22 +31,63 @@ function checkLink (link, mustHaveData) {
 exports.import = function (link) {
 
     if (!checkLink(link, true)) { return; }
-
-    if (!link.data) {
-        link.send(400, JSON.stringify({ error: 'Missing data' }));
-        return;
-    }
+    
+    console.dir(link.data);
     
     // TODO remove the following line, it is just for TESTING
     // link.send(200, 'ok');
     
-    model.importData(link.data, function (error) {
-        if (error) {
-            link.send(400, JSON.stringify({error: error}));
+    var createRequest = {
+        role: link.session.crudRole,
+        templateId: ObjectId('000000000000000000000004'),
+        data: {
+            _tp: [ObjectId('000000000000000000000004')],
+            name: 'Import ' + link.data.path,
+            type: 'fixed',
+            template: ObjectId(link.data.template)
+        }
+    };
+    
+    M.emit('crud.create', createRequest, function (err, results) {
+        
+        if (err || !results || !results[0]) {
+            link.send(400, JSON.stringify({error: err || 'Could not create import list'}));
             return;
         }
         
-        link.send(200, JSON.stringify({success: 'Data received'}));
+        var updateRequest = {
+            role: link.session.crudRole,
+            templateId: ObjectId('000000000000000000000004'),
+            query: {
+                _id: results[0]._id
+            },
+            data: {
+                filters: [
+                    {
+                        field: '_li',
+                        operator: '=',
+                        value: results[0]._id
+                    }
+
+                ],
+                // TODO why are these mandatory
+                //      TODO put modm issue link here
+                name: 'Import ' + link.data.path,
+                type: 'fixed',
+                template: ObjectId(link.data.template),
+                _tp: [ObjectId('000000000000000000000004')]
+            }
+        };
+
+        M.emit('crud.update', updateRequest, function (err, resultCount) {
+            
+            if (err || !resultCount) {
+                link.send(400, JSON.stringify({error: err || 'Could not save import list'}));
+                return;
+            }
+            
+            link.send(200, JSON.stringify({success: 'Data imported'}));
+        });
     });
 };
 
@@ -114,7 +155,6 @@ exports.export = function (link) {
 };
 
 exports.readInbox = function (link) {
-setTimeout(function() {
 
     if (!checkLink(link)) { return; }
 
@@ -133,14 +173,11 @@ setTimeout(function() {
         link.send(200, inboxFiles);
     });
 
-}, 500);
 };
 
 exports.deleteFile = function (link) {
 
     if (!checkLink(link, true)) { return; }
-
-    //console.log(">>> " + link.data);
 
     var path = link.data;
 
