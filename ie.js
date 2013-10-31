@@ -103,12 +103,31 @@ function startExport() {
     } else {
         for (var field in self.template.schema) {
             
+            // TODO has own prop
+            
             // Skip keys that begin with "_"
             if (field.toString().charAt(0) === "_") continue;
             
             if (!("hidden" in self.template.schema[field])) {
                 columns.push(field);
             }
+        }
+    }
+    
+    // get the labels for the columns
+    
+    var labels = {};
+    
+    for (var i = 0, l = columns.length; i < l; ++ i) {
+        
+        if ("label" in self.template.schema[columns[i]]) {
+            if (typeof self.template.schema[columns[i]].label === "object") {
+                labels[columns[i]] = self.template.schema[columns[i]].label[M.getLocale()];
+            } else {
+                labels[columns[i]] = self.template.schema[columns[i]].label;
+            }
+        } else {
+            labels[columns[i]] = columns[i];
         }
     }
     
@@ -141,6 +160,7 @@ function startExport() {
             options: self.queryOptions,
             hasHeaders: self.export.headers || false,
             columns: columns,
+            labels: labels,
             separator: separators[self.export.separator]  || ";",
             filename: self.export.filename || "export_" + templateName.toLowerCase().replace(" ", "_") + "_" + timestamp
         }
@@ -170,6 +190,9 @@ function startExport() {
         alert(templateName + ' export started and will be available shortly in the import inbox.');
         return;
     });
+    
+    // hiding the UI
+    self.emit('hideUi');
 }
 
 function getTemplates () {
