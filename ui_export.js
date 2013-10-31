@@ -3,9 +3,6 @@ M.wrap('github/gabipetrovay/ie-dms/dev/ui_export.js', function (require, module,
 module.exports = function () {
     var self = this;
     
-    // export config
-    self['export'] = self['export'] || {};
-    
     // processing UI config
     self.config['export'].ui.selectors = self.config['export'].ui.selectors || {};
     self.config['export'].ui.selectors.hideUi = self.config['export'].ui.selectors.hideUi || ".close";
@@ -38,7 +35,7 @@ function initUi () {
     
     // hide UI config
     $(document).on("click", self.config['export'].ui.selectors.hideUi, function () {
-        hideUi();
+        hideUi.call(self);
     });
     
     // sortable lists
