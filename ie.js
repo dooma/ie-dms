@@ -82,7 +82,7 @@ function setQuery (query, options) {
 function startExport() {
     var self = this;
     
-    self['export'] = self['export'] || {};
+    self.config['export'] = self.config['export'] || {};
     
     if (!self.query) {
         alert('No data query set for export');
@@ -98,8 +98,8 @@ function startExport() {
     
     var columns = [];
     
-    if (self['export'].columns) {
-        columns = self['export'].columns;
+    if (self.config['export'].columns) {
+        columns = self.config['export'].columns;
     } else {
         for (var field in self.template.schema) {
             
@@ -158,22 +158,15 @@ function startExport() {
             template: self.template._id,
             query: self.query,
             options: self.queryOptions,
-            hasHeaders: self['export'].headers || false,
+            hasHeaders: self.config['export'].headers || false,
             columns: columns,
             labels: labels,
-            separator: separators[self['export'].separator]  || ";",
-            filename: self['export'].filename || "export_" + templateName.toLowerCase().replace(" ", "_") + "_" + timestamp
+            separator: separators[self.config['export'].separator]  || ";",
+            filename: self.config['export'].filename || "export_" + templateName.toLowerCase().replace(" ", "_") + "_" + timestamp
         }
     }
     
-    self.link('export', options, function(err, result) {
-
-        // TODO enhance
-
-        if (err) {
-            alert(err);
-            return;
-        }
+    self.link('export', options, function(err) {
 
         // give it a name
         var templateName;
@@ -186,9 +179,11 @@ function startExport() {
         if (!templateName) {
             templateName = self.template.name;
         }
-
-        alert(templateName + ' export started and will be available shortly in the import inbox.');
-        return;
+        
+        self.emit('notifications.show', {
+            type: err ? 'error' : 'info',
+            message: err ? err.error || err : (templateName + ' export started and will be available shortly in the import inbox.')
+        });
     });
     
     // hiding the UI

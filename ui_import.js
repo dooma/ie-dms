@@ -228,29 +228,10 @@ function importData () {
     
     // calling server operation
     self.link('import', { data: info }, function (err) {
-        
-        if (err) { 
-            /*$('body').append("<div class='message-popup error'><i class='icon-remove'></i> An error occurred!</div>");
-            $(".message-popup").fadeIn(300);
-            setTimeout (function () {
-                $(".message-popup").fadeOut(1000, function () {
-                    $(this).remove();
-                });
-            }, 1000);
-            return;*/
-            self.emit("notifications.show", "error", "An error occured!");
-        }
-        
-        // TODO handle "IMPORT SUCCESFUL" message
-        /*$('body').append("<div class='message-popup success'><i class='icon-ok'></i> Import successful!</div>");
-        $(".message-popup").fadeIn(300);
-        setTimeout (function () {
-            $(".message-popup").fadeOut(1000, function () {
-                $(this).remove();
-                self.emit('reset');
-            });
-        }, 1000);*/
-        self.emit("notifications.show", "ok", "Import process started");
+        self.emit('notifications.show', {
+            type: err ? 'error' : 'info',
+            message: err ? err.error || err : 'Import started'
+        });
     });
 }
 
