@@ -65,30 +65,30 @@ function initUi () {
         };
         var mySeparator = $(this).val();
         $(".item-separator").html(separators[mySeparator]);
-        self['export'].separator = mySeparator;
+        self.config['export'].separator = mySeparator;
     });
     
     // headers checkbox
     $(self.config['export'].ui.selectors.headers).change(function () {
         if ($(this).is(":checked")) {
-            self['export'].headers = true;
+            self.config['export'].headers = true;
         } else {
-            self['export'].headers = false;
+            self.config['export'].headers = false;
         }
     });
     
     // email checkbox
     $(self.config['export'].ui.selectors.email).change(function () {
         if ($(this).is(":checked")) {
-            self['export'].email = true;
+            self.config['export'].email = true;
         } else {
-            self['export'].email = false;
+            self.config['export'].email = false;
         }
     });
     
     // filename change
     $(self.config['export'].ui.selectors.filename).keyup(function () {
-        self['export'].filename = $(this).val();
+        self.config['export'].filename = $(this).val();
     });
 }
     
