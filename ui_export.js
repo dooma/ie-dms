@@ -105,13 +105,13 @@ function hideUi () {
 function updateFields () {
     var self = this;
 
-    self['export'].columns = [];
+    self.config['export'].columns = [];
     
     var lis = $(self.config['export'].ui.selectors.exportList + ">li");
     
     for(var i = 1, l = lis.length; i < l; ++ i) {
         var field = $(lis[i]).attr("data-field");
-        self['export'].columns.push(field);
+        self.config['export'].columns.push(field);
     }
 }
 
@@ -126,10 +126,10 @@ function reset () {
     $(self.config['export'].ui.selectors.listSeparator).html(",");
     
     // reset export config
-    self['export'].columns = [];
-    self['export'].separator = "COMMA";
-    self['export'].headers = false;
-    self['export'].email = false;
+    self.config['export'].columns = [];
+    self.config['export'].separator = "COMMA";
+    self.config['export'].headers = false;
+    self.config['export'].email = false;
     
     // reseting list UI
     var fieldTemplateExport = $(self.config['export'].ui.selectors.exportList + " " + self.config['export'].ui.selectors.listTemplate).clone();
