@@ -47,9 +47,9 @@ exports.import = function (link) {
             template: ObjectId(link.data.template)
         }
     };
-    
+
     M.emit('crud.create', createRequest, function (err, results) {
-        
+
         if (err || !results || !results[0]) {
             link.send(400, JSON.stringify({error: err || 'Could not create import list'}));
             return;
@@ -62,25 +62,20 @@ exports.import = function (link) {
                 _id: results[0]._id
             },
             data: {
-                filters: [
-                    {
-                        field: '_li',
-                        operator: '=',
-                        value: results[0]._id
-                    }
-
-                ],
-                // TODO why are these mandatory
-                //      TODO put modm issue link here
-                name: 'Import ' + link.data.path,
-                type: 'fixed',
-                template: ObjectId(link.data.template),
-                _tp: [ObjectId('000000000000000000000004')]
+                $set: {
+                    filters: [
+                        {
+                            field: '_li',
+                            operator: '=',
+                            value: results[0]._id
+                        }
+                    ]
+                }
             }
         };
 
         M.emit('crud.update', updateRequest, function (err, resultCount) {
-            
+
             if (err || !resultCount) {
                 link.send(400, JSON.stringify({error: err || 'Could not save import list'}));
                 return;
