@@ -232,6 +232,7 @@ function importData () {
             type: err ? 'error' : 'info',
             message: err ? err.error || err : 'Import started'
         });
+        self.emit('reset');
     });
 }
 
