@@ -32,8 +32,6 @@ exports.import = function (link) {
 
     if (!checkLink(link, true)) { return; }
     
-    console.dir(link.data);
-    
     // TODO remove the following line, it is just for TESTING
     // link.send(200, 'ok');
     
