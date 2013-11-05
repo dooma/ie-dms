@@ -595,7 +595,7 @@ function gatherInfo () {
     
     info.path = self.columnData.path;
     info.template = $(self.config['import'].ui.selectors.template).val();
-    info.separator = self.columnData.separator || "COMMA";
+    info.separator = self.columnData.separator || self.columns.separator;
     info.charset = self.columnData.charset || "ascii";
     info.headers = self.columnData.hasHeaders || false;
     info.update = $("[name=operation]:checked").val() === "update" ? true : false ;

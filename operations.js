@@ -28,13 +28,88 @@ function checkLink (link, mustHaveData) {
     return true;
 }
 
+function insertItem (item, templateId, role) {
+
+    item._tp = ObjectId(templateId);
+    var customRequst = {
+        role: role,
+        templateId: ObjectId(templateId),
+        data: item,
+        options: {},
+        method: 'insert'
+    };
+    
+    M.emit('crud.create', customRequst, function (err, data){
+
+        if (err) {
+            //TODO handle error
+            console.log(err);
+            return;
+        }
+    });
+}
+
+function arrayToObject (data, template, mappings) {
+    
+    var obj = {};
+
+    for (var fieldKey in mappings) {
+
+        if (!data[mappings[fieldKey]]) continue;
+
+        var splits = fieldKey.split('.');
+        var curObj = obj;
+        var curSchema = template.schema;
+
+        for (var j = 0; j < splits.length -1; ++j) {
+            curObj[splits[j]] = curObj[splits[j]] || {};
+            curObj = curObj[splits[j]];
+        }
+        
+        if (curSchema[fieldKey].type === 'string') {
+            curObj[splits[j]] = data[mappings[fieldKey]];
+        } else if (curSchema[fieldKey].type === 'number') {
+            curObj[splits[j]] = parseInt(data[mappings[fieldKey]]);
+        } else if (curSchema[fieldKey].type === 'date') {
+            curObj[splits[j]] = new Date(data[mappings[fieldKey]]);
+        } else if (curSchema[fieldKey].type === 'boolean') {
+            curObj[splits[j]] = Boolean(data[mappings[fieldKey]]);
+        }
+    }
+    
+    return obj;
+}
+
+function getTemplate (templateId, role, callback) {
+
+    //build the request
+    var customRequst = {
+        role: role,
+        templateId: ObjectId('000000000000000000000000'),
+        query: {
+            _id: ObjectId(templateId)
+        },
+        data: {},
+        options: {},
+        method: 'read'
+    };
+
+    //emit the request
+    M.emit('crud.read', customRequst, function(err, data){
+        
+        if (err) {callback(err, null); return;}
+        callback(null, data[0]);
+            
+    });
+}
+
 exports.import = function (link) {
 
     if (!checkLink(link, true)) { return; }
     
     // TODO remove the following line, it is just for TESTING
     // link.send(200, 'ok');
-    
+
     var createRequest = {
         role: link.session.crudRole,
         templateId: ObjectId('000000000000000000000004'),
@@ -82,6 +157,59 @@ exports.import = function (link) {
             link.send(200, JSON.stringify({success: 'Data imported'}));
         });
     });
+
+    //insert the data
+
+    //file path
+    var path = APP_DIR + '/' + link.params.inboxDir + '/' + link.data.path;
+
+    //separator
+    var separators = {
+        "COMMA": ",",
+        "SEMICOLON": ";",
+        "TAB": "\t",
+        "SPACE": " "
+    }
+
+    var s = link.data.separator;
+    s= separators[s] || s;
+
+    //charset
+    var c = link.data.charset;
+
+    //set parse options
+    var options = {
+        delimiter: s,
+        charset: c
+    }
+    
+    //get the current template
+    var template;
+    getTemplate(link.data.template, link.session.crudRole, function(err, data){
+        
+        //TODO handle error
+        if (err) {console.log(err); return;}
+        template = data;
+
+        //parse the file
+        var line = 0;
+        CSV.parse(path, options, function (err, row, next){
+            
+            //TODO handle error
+            if (err) {return; console.log(err);}
+
+            if (row && line != 0 && line) {
+                
+                var object = arrayToObject(row, template, link.data.mappings);
+                insertItem(object, link.data.template, link.session.crudRole);
+            }
+            line ++;
+            next();
+        });
+        
+    });
+
+    //TODO give an appropriate notification message when the operation is complete
 };
 
 exports.export = function (link) {
@@ -125,13 +253,7 @@ exports.export = function (link) {
         // TODO create websafe name
         var file = fs.createWriteStream(APP_DIR + '/' + link.params.inboxDir + "/" + filename);
         
-        // if cursor array
-        if (resultCursor.constructor.name === "Array") { 
-            
-            // TODO handle array cursor...
-            
-            return;
-        }
+        console.dir(link.data.labels);
         
         // write headers
         if (link.data.hasHeaders) {
@@ -414,4 +536,3 @@ function getUpload(link, callback) {
         });
     });
 }
-
