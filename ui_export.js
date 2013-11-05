@@ -3,6 +3,9 @@ M.wrap('github/gabipetrovay/ie-dms/dev/ui_export.js', function (require, module,
 module.exports = function () {
     var self = this;
     
+    // processing export global config
+    self['export'] = self['export'] || {};
+    
     // processing UI config
     self.config['export'].ui.selectors = self.config['export'].ui.selectors || {};
     self.config['export'].ui.selectors.hideUi = self.config['export'].ui.selectors.hideUi || ".close";
@@ -65,30 +68,30 @@ function initUi () {
         };
         var mySeparator = $(this).val();
         $(".item-separator").html(separators[mySeparator]);
-        self.config['export'].separator = mySeparator;
+        self['export'].separator = mySeparator;
     });
     
     // headers checkbox
     $(self.config['export'].ui.selectors.headers).change(function () {
         if ($(this).is(":checked")) {
-            self.config['export'].headers = true;
+            self['export'].headers = true;
         } else {
-            self.config['export'].headers = false;
+            self['export'].headers = false;
         }
     });
     
     // email checkbox
     $(self.config['export'].ui.selectors.email).change(function () {
         if ($(this).is(":checked")) {
-            self.config['export'].email = true;
+            self['export'].email = true;
         } else {
-            self.config['export'].email = false;
+            self['export'].email = false;
         }
     });
     
     // filename change
     $(self.config['export'].ui.selectors.filename).keyup(function () {
-        self.config['export'].filename = $(this).val();
+        self['export'].filename = $(this).val();
     });
 }
     
@@ -105,13 +108,13 @@ function hideUi () {
 function updateFields () {
     var self = this;
 
-    self.config['export'].columns = [];
+    self['export'].columns = [];
     
     var lis = $(self.config['export'].ui.selectors.exportList + ">li");
     
     for(var i = 1, l = lis.length; i < l; ++ i) {
         var field = $(lis[i]).attr("data-field");
-        self.config['export'].columns.push(field);
+        self['export'].columns.push(field);
     }
 }
 
@@ -126,10 +129,10 @@ function reset () {
     $(self.config['export'].ui.selectors.listSeparator).html(",");
     
     // reset export config
-    self.config['export'].columns = [];
-    self.config['export'].separator = "COMMA";
-    self.config['export'].headers = false;
-    self.config['export'].email = false;
+    self['export'].columns = [];
+    self['export'].separator = "COMMA";
+    self['export'].headers = false;
+    self['export'].email = false;
     
     // reseting list UI
     var fieldTemplateExport = $(self.config['export'].ui.selectors.exportList + " " + self.config['export'].ui.selectors.listTemplate).clone();
@@ -145,6 +148,7 @@ function reset () {
     
 function setFields (template) {
     var self = this;
+    self['export'].template = template;
     var tableFields = [];
     var otherFields = [];
     
@@ -153,7 +157,7 @@ function setFields (template) {
     
     // TODO handle undefined variable
     
-    for(var field in template.schema) {
+    for (var field in template.schema) {
         
         if (!template.schema.hasOwnProperty(field)) continue;
         

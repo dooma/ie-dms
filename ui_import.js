@@ -213,7 +213,7 @@ function setTemplate (templateId) {
     }
 
     // otherwise we refresh the fields and the table
-    self.emit('template', self.template);
+    self.emit('template', self['import'].template);
     self.emit('_refreshFields');
     self.emit('_refreshTable');
 }
@@ -255,7 +255,7 @@ function getSelectedTemplate (templateId) {
 function refreshFields () {
     var self = this;
 
-    if (!self.template) {
+    if (!self['import'].template) {
         return;
     }
     
@@ -274,7 +274,7 @@ function refreshFields () {
 
     // reorder the fields
     var fields = [];
-    var schema = self.template.schema;
+    var schema = self['import'].template.schema;
 
     // get the schema fields with keys and computed labels
     for (var key in schema) {
@@ -495,7 +495,7 @@ function refreshTable () {
     var self = this;
     var data = [];
 
-    if (!jQuery.isEmptyObject(self.mappings) && self.template) {
+    if (!jQuery.isEmptyObject(self.mappings) && self['import'].template) {
         var lineTemplate = {};
 
         var lines = self.columns.lines || [];
@@ -591,7 +591,7 @@ function reset () {
 function gatherInfo () {
     var self = this;
     var info = {};
-    var schema = self.template.schema;
+    var schema = self['import'].template.schema;
     
     info.path = self.columnData.path;
     info.template = $(self.config['import'].ui.selectors.template).val();

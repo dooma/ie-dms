@@ -8,6 +8,7 @@ var Events = require('github/jillix/events');
 module.exports = function (config) {
 
     var self = this;
+    self['import'] = self['import'] || {};
     self.config = config;
     self.inbox = [];
     self.$ = {};
@@ -49,7 +50,7 @@ function reset () {
     var self = this;
 
     // common properties
-    delete self.template;
+    delete self['import'].template;
 
     // import properties
     delete self.mappings;
@@ -69,7 +70,7 @@ function setTemplate (templateId) {
         return;
     }
 
-    self.template = JSON.parse(JSON.stringify(self.templates[templateId]));
+    self['import'].template = JSON.parse(JSON.stringify(self.templates[templateId]));
 }
 
 function setQuery (query, options) {
@@ -82,13 +83,13 @@ function setQuery (query, options) {
 function startExport() {
     var self = this;
     
-    self.config['export'] = self.config['export'] || {};
+    self['export'] = self['export'] || {};
     
     if (!self.query) {
         alert('No data query set for export');
         return;
     }
-    if (!self.template) {
+    if (!self['export'].template) {
         alert('No data template set for export');
         return;
     }
@@ -98,17 +99,17 @@ function startExport() {
     
     var columns = [];
     
-    if (self.config['export'].columns) {
-        columns = self.config['export'].columns;
+    if (self['export'].columns) {
+        columns = self['export'].columns;
     } else {
-        for (var field in self.template.schema) {
+        for (var field in self['export'].template.schema) {
             
-            // TODO has own prop
+            if (!self['export'].template.schema.hasOwnProperty(field)) continue;
             
             // Skip keys that begin with "_"
             if (field.toString().charAt(0) === "_") continue;
             
-            if (!("hidden" in self.template.schema[field])) {
+            if (!("hidden" in self['export'].template.schema[field])) {
                 columns.push(field);
             }
         }
@@ -120,11 +121,11 @@ function startExport() {
     
     for (var i = 0, l = columns.length; i < l; ++ i) {
         
-        if ("label" in self.template.schema[columns[i]]) {
-            if (typeof self.template.schema[columns[i]].label === "object") {
-                labels[columns[i]] = self.template.schema[columns[i]].label[M.getLocale()];
+        if ("label" in self['export'].template.schema[columns[i]]) {
+            if (typeof self['export'].template.schema[columns[i]].label === "object") {
+                labels[columns[i]] = self['export'].template.schema[columns[i]].label[M.getLocale()];
             } else {
-                labels[columns[i]] = self.template.schema[columns[i]].label;
+                labels[columns[i]] = self['export'].template.schema[columns[i]].label;
             }
         } else {
             labels[columns[i]] = columns[i];
@@ -133,14 +134,14 @@ function startExport() {
     
     var templateName = "";
     
-    if (typeof self.template.options.label === "object") {
-        templateName += self.template.options.label[M.getLocale()];
+    if (typeof self['export'].template.options.label === "object") {
+        templateName += self['export'].template.options.label[M.getLocale()];
     } else {
-        templateName += self.template.options.label;
+        templateName += self['export'].template.options.label;
     }
     
     if (!templateName) {
-        templateName = self.template.name;
+        templateName = self['export'].template.name;
     }
     
     var date = new Date().toISOString().replace(/[^\d]/g, '');
@@ -155,14 +156,14 @@ function startExport() {
     
     var options = {
         data: {
-            template: self.template._id,
+            template: self['export'].template._id,
             query: self.query,
             options: self.queryOptions,
-            hasHeaders: self.config['export'].headers || false,
+            hasHeaders: self['export'].headers || false,
             columns: columns,
             labels: labels,
-            separator: separators[self.config['export'].separator]  || ";",
-            filename: self.config['export'].filename || "export_" + templateName.toLowerCase().replace(" ", "_") + "_" + timestamp
+            separator: separators[self['export'].separator]  || ";",
+            filename: self['export'].filename || "export_" + templateName.toLowerCase().replace(" ", "_") + "_" + timestamp
         }
     }
     
@@ -170,14 +171,14 @@ function startExport() {
 
         // give it a name
         var templateName;
-        if (self.template.options && self.template.options.label) {
-            templateName = self.template.options.label;
+        if (self['export'].template.options && self['export'].template.options.label) {
+            templateName = self['export'].template.options.label;
             if (typeof templateName === 'object') {
                 templateName = templateName[M.getLocale()];
             }
         }
         if (!templateName) {
-            templateName = self.template.name;
+            templateName = self['export'].template.name;
         }
         
         self.emit('notifications.show', {
