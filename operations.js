@@ -125,7 +125,13 @@ exports.export = function (link) {
         // TODO create websafe name
         var file = fs.createWriteStream(APP_DIR + '/' + link.params.inboxDir + "/" + filename);
         
-        console.dir(link.data.labels);
+        // if cursor array
+        if (resultCursor.constructor.name === "Array") { 
+            
+            // TODO handle array cursor...
+            
+            return;
+        }
         
         // write headers
         if (link.data.hasHeaders) {
