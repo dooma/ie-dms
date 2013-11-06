@@ -273,7 +273,17 @@ exports.export = function (link) {
         var stream = resultCursor.stream({ transform: createTransform() });
         stream.pipe(file);
         stream.on('end', function () {
-            M.emit('exportFinished');
+            M.emit('sockets.send', {
+                type: 'exportFinished',
+                //session: link.session._sid,
+                // TODO
+                session: "sid",
+                data: {
+                    filename: filename,
+                    count: resultCount,
+                }
+            });
+            // M.emit('exportFinished');
         });
     });
     
