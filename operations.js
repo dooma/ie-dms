@@ -38,7 +38,7 @@ function insertItem (item, templateId, role,  callback) {
         options: {},
         method: 'insert'
     };
-
+    console.log(customRequst);
     M.emit('crud.create', customRequst, function (err, data){
 
         if (err) {
@@ -211,10 +211,14 @@ exports.import = function (link) {
                             next();
                         }
                         var object = arrayToObject(row, template, link.data.mappings);
+                        object._li = [results[0]._id];
                         insertItem(object, link.data.template, link.session.crudRole, function() {
                             line ++;
                             next();
                         });
+                    } else {
+                        //TODO give appropriate message when import complete
+                        M.emit('exportFinished');
                     }
                 });
              });
