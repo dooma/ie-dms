@@ -28,7 +28,7 @@ function checkLink (link, mustHaveData) {
     return true;
 }
 
-function insertItem (item, templateId, role) {
+function insertItem (item, templateId, role,  callback) {
 
     item._tp = ObjectId(templateId);
     var customRequst = {
@@ -38,7 +38,7 @@ function insertItem (item, templateId, role) {
         options: {},
         method: 'insert'
     };
-    
+
     M.emit('crud.create', customRequst, function (err, data){
 
         if (err) {
@@ -46,6 +46,8 @@ function insertItem (item, templateId, role) {
             console.log(err);
             return;
         }
+
+        callback();
     });
 }
 
@@ -153,63 +155,71 @@ exports.import = function (link) {
                 link.send(400, JSON.stringify({error: err || 'Could not save import list'}));
                 return;
             }
-            
-            link.send(200, JSON.stringify({success: 'Data imported'}));
-        });
-    });
-
-    //insert the data
-
-    //file path
-    var path = APP_DIR + '/' + link.params.inboxDir + '/' + link.data.path;
-
-    //separator
-    var separators = {
-        "COMMA": ",",
-        "SEMICOLON": ";",
-        "TAB": "\t",
-        "SPACE": " "
-    }
-
-    var s = link.data.separator;
-    s= separators[s] || s;
-
-    //charset
-    var c = link.data.charset;
-
-    //set parse options
-    var options = {
-        delimiter: s,
-        charset: c
-    }
     
-    //get the current template
-    var template;
-    getTemplate(link.data.template, link.session.crudRole, function(err, data){
-        
-        //TODO handle error
-        if (err) {console.log(err); return;}
-        template = data;
+            link.send(200, JSON.stringify({success: 'Data imported'}));
 
-        //parse the file
-        var line = 0;
-        CSV.parse(path, options, function (err, row, next){
-            
-            //TODO handle error
-            if (err) {return; console.log(err);}
+            //insert the data
 
-            if (row && line != 0 && line) {
-                
-                var object = arrayToObject(row, template, link.data.mappings);
-                insertItem(object, link.data.template, link.session.crudRole);
+            //file path
+            var path = APP_DIR + '/' + link.params.inboxDir + '/' + link.data.path;
+
+            //separator
+            var separators = {
+                "COMMA": ",",
+                "SEMICOLON": ";",
+                "TAB": "\t",
+                "SPACE": " "
             }
-            line ++;
-            next();
-        });
-        
-    });
 
-    //TODO give an appropriate notification message when the operation is complete
+            var s = link.data.separator;
+            s= separators[s] || s;
+
+            //charset
+            var c = link.data.charset;
+
+            //set parse options
+            var options = {
+                delimiter: s,
+                charset: c
+            }
+            
+            //get the current template
+            var template;
+            getTemplate(link.data.template, link.session.crudRole, function(err, data){
+                
+                //TODO handle error
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+                template = data;
+
+                //parse the file
+                var line = 0;
+                CSV.parse(path, options, function (err, row, next){
+                    
+                    //TODO handle error
+                    if (err) {
+                        console.log(err);
+                        return;
+                    }
+
+                    if (row) {
+                        
+                        if (!link.data.headers && line == 0) {
+                            line ++;
+                            next();
+                        }
+                        var object = arrayToObject(row, template, link.data.mappings);
+                        insertItem(object, link.data.template, link.session.crudRole, function() {
+                            line ++;
+                            next();
+                        });
+                    }
+                });
+             });
+        });
+    });
 };
 
 exports.export = function (link) {
