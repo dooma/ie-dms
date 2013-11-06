@@ -43,7 +43,7 @@ function insertItem (item, templateId, role) {
 
         if (err) {
             //TODO handle error
-            console.log(err);
+            console.error(err);
             return;
         }
     });
@@ -188,7 +188,11 @@ exports.import = function (link) {
     getTemplate(link.data.template, link.session.crudRole, function(err, data){
         
         //TODO handle error
-        if (err) {console.log(err); return;}
+        if (err) {
+            console.error(err);
+            return;
+        }
+        
         template = data;
 
         //parse the file
@@ -196,7 +200,10 @@ exports.import = function (link) {
         CSV.parse(path, options, function (err, row, next){
             
             //TODO handle error
-            if (err) {return; console.log(err);}
+            if (err) {
+                console.error(err);
+                return;    
+            }
 
             if (row && line != 0 && line) {
                 
@@ -252,8 +259,6 @@ exports.export = function (link) {
         }
         // TODO create websafe name
         var file = fs.createWriteStream(APP_DIR + '/' + link.params.inboxDir + "/" + filename);
-        
-        console.dir(link.data.labels);
         
         // write headers
         if (link.data.hasHeaders) {
