@@ -28,7 +28,7 @@ function checkLink (link, mustHaveData) {
     return true;
 }
 
-function insertItem (item, templateId, role,  callback) {
+function insertItem (item, templateId, role, callback) {
 
     item._tp = ObjectId(templateId);
 
@@ -49,7 +49,9 @@ function arrayToObject (data, template, mappings) {
 
     for (var fieldKey in mappings) {
 
-        if (!data[mappings[fieldKey]]) continue;
+        if (!data[mappings[fieldKey]]) {
+            continue;
+        }
 
         var splits = fieldKey.split('.');
         var curObj = obj;
@@ -144,8 +146,8 @@ exports.import = function (link) {
                 link.send(400, JSON.stringify({error: err || 'Could not save import list'}));
                 return;
             }
-    
-            link.send(200, JSON.stringify({success: 'Data imported'}));
+
+            link.send(200, JSON.stringify({ success: 'Data imported' }));
 
             // insert the data
 
@@ -168,9 +170,11 @@ exports.import = function (link) {
 
             // set parse options
             var options = {
-                delimiter: s,
-                charset: c
-            }
+                // separator
+                delimiter: separators[link.data.separator] || link.data.separator,
+                // charset
+                charset: link.data.charset
+            };
             
             // get the current template
             var template;
@@ -255,7 +259,11 @@ exports.import = function (link) {
                         });
                     }
                 });
-             });
+                
+                link.send(200, JSON.stringify({success: 'Data imported'}));
+            });
+        
+            //TODO give an appropriate notification message when the operation is complete
         });
     });
 };
@@ -616,3 +624,4 @@ function getUpload(link, callback) {
         });
     });
 }
+
