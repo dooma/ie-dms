@@ -203,7 +203,7 @@ exports.import = function (link) {
                 var line = 0;
                 var itemCount = 0;
                 var errorCount = 0;
-
+                 
                 CSV.parse(path, options, function (err, row, next){
 
                     if (err) {
@@ -224,25 +224,25 @@ exports.import = function (link) {
                     }
 
                     if (row) {
-                        if (!link.data.headers && line == 0) {
+                        if (!link.data.headers || line > 0) {
+                            var object = arrayToObject(row, template, link.data.mappings);
+                            // add the import list to this item
+                            object._li = [results[0]._id];
+
+                            insertItem(object, link.data.template, link.session.crudRole, function(err) {
+                                line++;
+                                if (err) {
+                                    errorCount++;
+                                } else {
+                                    itemCount++;
+                                }
+
+                                next();
+                            });
+                        } else if (link.data.headers && line == 0){
                             line++;
                             next();
                         }
-
-                        var object = arrayToObject(row, template, link.data.mappings);
-                        // add the import list to this item
-                        object._li = [results[0]._id];
-
-                        insertItem(object, link.data.template, link.session.crudRole, function(err) {
-                            line++;
-                            if (err) {
-                                errorCount++;
-                            } else {
-                                itemCount++;
-                            }
-
-                            next();
-                        });
                     } else {
                         // TODO the next function above is called one more time after the row comes nulli
                         // and this code will also be called twice
