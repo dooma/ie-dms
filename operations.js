@@ -28,7 +28,7 @@ function checkLink (link, mustHaveData) {
     return true;
 }
 
-function insertItem (item, templateId, role,  callback) {
+function insertItem (item, templateId, role, callback) {
 
     item._tp = ObjectId(templateId);
     var customRequst = {
@@ -38,17 +38,8 @@ function insertItem (item, templateId, role,  callback) {
         options: {},
         method: 'insert'
     };
-    console.log(customRequst);
-    M.emit('crud.create', customRequst, function (err, data){
-
-        if (err) {
-            //TODO handle error
-            console.error(err);
-            return;
-        }
-
-        callback();
-    });
+    
+    M.emit('crud.create', customRequst, callback);
 }
 
 function arrayToObject (data, template, mappings) {
@@ -57,7 +48,9 @@ function arrayToObject (data, template, mappings) {
 
     for (var fieldKey in mappings) {
 
-        if (!data[mappings[fieldKey]]) continue;
+        if (!data[mappings[fieldKey]]) {
+            continue;
+        }
 
         var splits = fieldKey.split('.');
         var curObj = obj;
@@ -111,7 +104,7 @@ exports.import = function (link) {
     
     // TODO remove the following line, it is just for TESTING
     // link.send(200, 'ok');
-
+    
     var createRequest = {
         role: link.session.crudRole,
         templateId: ObjectId('000000000000000000000004'),
@@ -155,73 +148,70 @@ exports.import = function (link) {
                 link.send(400, JSON.stringify({error: err || 'Could not save import list'}));
                 return;
             }
-    
-            link.send(200, JSON.stringify({success: 'Data imported'}));
-
-            //insert the data
-
+            
             //file path
             var path = APP_DIR + '/' + link.params.inboxDir + '/' + link.data.path;
-
+        
             //separator
             var separators = {
                 "COMMA": ",",
                 "SEMICOLON": ";",
                 "TAB": "\t",
                 "SPACE": " "
-            }
-
-            var s = link.data.separator;
-            s= separators[s] || s;
-
-            //charset
-            var c = link.data.charset;
-
+            };
+        
             //set parse options
             var options = {
-                delimiter: s,
-                charset: c
-            }
+                // separator
+                delimiter: separators[link.data.separator] || link.data.separator,
+                // charset
+                charset: link.data.charset
+            };
             
             //get the current template
             var template;
             getTemplate(link.data.template, link.session.crudRole, function(err, data){
                 
-                //TODO handle error
+                // handle error
                 if (err) {
-                    console.error(err);
+                    link.send(400, JSON.stringify({error: err}));
                     return;
                 }
+                
                 template = data;
-
+        
                 //parse the file
-                var line = 0;
                 CSV.parse(path, options, function (err, row, next){
                     
                     //TODO handle error
                     if (err) {
-                        console.error(err);
+                        console.log(err);
+                        next();
                         return;
                     }
-
+        
                     if (row) {
-                        
-                        if (!link.data.headers && line == 0) {
-                            line ++;
-                            next();
-                        }
                         var object = arrayToObject(row, template, link.data.mappings);
-                        object._li = [results[0]._id];
-                        insertItem(object, link.data.template, link.session.crudRole, function() {
-                            line ++;
+                        object._li = results[0]._id;
+                        
+                        insertItem(object, link.data.template, link.session.crudRole, function (err, data) {
+                            
+                            if (err) {
+                                console.error(err);
+                            }
+                            
                             next();
                         });
                     } else {
-                        //TODO give appropriate message when import complete
-                        M.emit('exportFinished');
+                        //done
+                        //console.log('Data imported');
                     }
                 });
-             });
+                
+                link.send(200, JSON.stringify({success: 'Data imported'}));
+            });
+        
+            //TODO give an appropriate notification message when the operation is complete
         });
     });
 };
