@@ -2,8 +2,8 @@ var model = require('./model.js');
 var fs = require('fs');
 var modm = require('modm');
 var ObjectId = modm.ObjectId;
-var Charset = require("jschardet");
-var CSV = require("a-csv");
+var Charset = require('jschardet');
+var CSV = require('a-csv');
 
 var APP_DIR = M.config.APPLICATION_ROOT + M.config.app.id;
 
@@ -31,24 +31,16 @@ function checkLink (link, mustHaveData) {
 function insertItem (item, templateId, role,  callback) {
 
     item._tp = ObjectId(templateId);
-    var customRequst = {
+
+    var customRequest = {
         role: role,
         templateId: ObjectId(templateId),
         data: item,
         options: {},
         method: 'insert'
     };
-    console.log(customRequst);
-    M.emit('crud.create', customRequst, function (err, data){
 
-        if (err) {
-            //TODO handle error
-            console.error(err);
-            return;
-        }
-
-        callback();
-    });
+    M.emit('crud.create', customRequest, callback);
 }
 
 function arrayToObject (data, template, mappings) {
@@ -85,7 +77,7 @@ function arrayToObject (data, template, mappings) {
 function getTemplate (templateId, role, callback) {
 
     //build the request
-    var customRequst = {
+    var customRequest = {
         role: role,
         templateId: ObjectId('000000000000000000000000'),
         query: {
@@ -97,7 +89,7 @@ function getTemplate (templateId, role, callback) {
     };
 
     //emit the request
-    M.emit('crud.read', customRequst, function(err, data){
+    M.emit('crud.read', customRequest, function(err, data){
         
         if (err) {callback(err, null); return;}
         callback(null, data[0]);
@@ -108,9 +100,6 @@ function getTemplate (templateId, role, callback) {
 exports.import = function (link) {
 
     if (!checkLink(link, true)) { return; }
-    
-    // TODO remove the following line, it is just for TESTING
-    // link.send(200, 'ok');
 
     var createRequest = {
         role: link.session.crudRole,
@@ -158,67 +147,112 @@ exports.import = function (link) {
     
             link.send(200, JSON.stringify({success: 'Data imported'}));
 
-            //insert the data
+            // insert the data
 
-            //file path
+            // file path
             var path = APP_DIR + '/' + link.params.inboxDir + '/' + link.data.path;
 
-            //separator
+            // separator
             var separators = {
-                "COMMA": ",",
-                "SEMICOLON": ";",
-                "TAB": "\t",
-                "SPACE": " "
+                'COMMA': ',',
+                'SEMICOLON': ';',
+                'TAB': '\t',
+                'SPACE': ' '
             }
 
             var s = link.data.separator;
-            s= separators[s] || s;
+            s = separators[s] || s;
 
-            //charset
+            // charset
             var c = link.data.charset;
 
-            //set parse options
+            // set parse options
             var options = {
                 delimiter: s,
                 charset: c
             }
             
-            //get the current template
+            // get the current template
             var template;
             getTemplate(link.data.template, link.session.crudRole, function(err, data){
                 
-                //TODO handle error
                 if (err) {
-                    console.error(err);
+                    // let the client know we had an error
+                    M.emit('sockets.send', {
+                        dest: link.session._sid,
+                        type: 'session',
+                        event: 'ie',
+                        data: {
+                            operation: 'import',
+                            file: link.data.path,
+                            template: link.data.template,
+                            status: 'error',
+                            message: err.toString()
+                        }
+                    });
                     return;
                 }
+
                 template = data;
 
-                //parse the file
+                // parse the file
                 var line = 0;
+                var itemCount = 0;
+                var errorCount = 0;
+
                 CSV.parse(path, options, function (err, row, next){
-                    
-                    //TODO handle error
+
                     if (err) {
-                        console.error(err);
+                        // let the client know we had an error
+                        M.emit('sockets.send', {
+                            dest: link.session._sid,
+                            type: 'session',
+                            event: 'ie',
+                            data: {
+                                operation: 'import',
+                                file: link.data.path,
+                                template: link.data.template,
+                                status: 'error',
+                                message: err.toString()
+                            }
+                        });
                         return;
                     }
 
                     if (row) {
-                        
                         if (!link.data.headers && line == 0) {
-                            line ++;
+                            line++;
                             next();
                         }
+
                         var object = arrayToObject(row, template, link.data.mappings);
+                        // add the import list to this item
                         object._li = [results[0]._id];
-                        insertItem(object, link.data.template, link.session.crudRole, function() {
-                            line ++;
+
+                        insertItem(object, link.data.template, link.session.crudRole, function(err) {
+                            line++;
+                            if (err) {
+                                errorCount++;
+                            } else {
+                                itemCount++;
+                            }
+
                             next();
                         });
                     } else {
-                        //TODO give appropriate message when import complete
-                        M.emit('exportFinished');
+                        // TODO the next function above is called one more time after the row comes nulli
+                        // and this code will also be called twice
+                        M.emit('sockets.send', {
+                            dest: link.session._sid,
+                            type: 'session',
+                            event: 'ie',
+                            data: {
+                                operation: 'import',
+                                file: link.data.path,
+                                template: link.data.template,
+                                count: itemCount
+                            }
+                        });
                     }
                 });
              });
@@ -231,7 +265,7 @@ exports.export = function (link) {
     if (!checkLink(link, true)) { return; }
     
     try {
-        var customRequst = {
+        var customRequest = {
             role: link.session.crudRole,
             templateId: link.data.template,
             query: link.data.query,
@@ -254,47 +288,71 @@ exports.export = function (link) {
                 line += value + link.data.separator;
             }
             
-            return line.slice(0, -1) + "\n";
+            return line.slice(0, -1) + '\n';
         };
     }
-    
-    M.emit('crud.read', customRequst, function(err, resultCursor, resultCount) {
+
+    // we can already send the response to the client
+    link.send(200, 'OK');
+
+    M.emit('crud.read', customRequest, function(err, resultCursor, resultCount) {
+
+        if (err) {
+            // let the client know we had an error
+            M.emit('sockets.send', {
+                dest: link.session._sid,
+                type: 'session',
+                event: 'ie',
+                data: {
+                    operation: 'export',
+                    file: filename,
+                    template: link.data.template,
+                    status: 'error',
+                    message: err.toString()
+                }
+            });
+            return;
+        }
+
         // TODO compute default file name also on server
-        var filename = link.data.filename || "export";
+        var filename = link.data.filename || 'export';
         if (filename.substr(-4) !== '.csv') {
             filename += '.csv';
         }
+
         // TODO create websafe name
-        var file = fs.createWriteStream(APP_DIR + '/' + link.params.inboxDir + "/" + filename);
+        var file = fs.createWriteStream(APP_DIR + '/' + link.params.inboxDir + '/' + filename);
         
         // write headers
         if (link.data.hasHeaders) {
-            var headers = "";
+            var headers = '';
             
             for (var i = 0, l = link.data.columns.length; i < l; ++ i) {
                 headers += link.data.labels[link.data.columns[i]] + link.data.separator;
             }
             
-            file.write(headers.slice(0, -1) + "\n");
+            file.write(headers.slice(0, -1) + '\n');
         }
+
         var stream = resultCursor.stream({ transform: createTransform() });
+
         stream.pipe(file);
+
         stream.on('end', function () {
+            // let the client know we are done
             M.emit('sockets.send', {
-                type: 'exportFinished',
-                //session: link.session._sid,
-                // TODO
-                session: "sid",
+                dest: link.session._sid,
+                type: 'session',
+                event: 'ie',
                 data: {
-                    filename: filename,
-                    count: resultCount,
+                    operation: 'export',
+                    file: filename,
+                    template: link.data.template,
+                    count: resultCount
                 }
             });
-            // M.emit('exportFinished');
         });
     });
-    
-    link.send(200, 'OK');
 };
 
 exports.readInbox = function (link) {
@@ -327,12 +385,12 @@ exports.deleteFile = function (link) {
     if (!path) { return; }
 
     //process path
-    var modifiedPath = path.replace(/\.\.\//g, "");
-    modifiedPath = modifiedPath.replace(/\.\//g, "");
+    var modifiedPath = path.replace(/\.\.\//g, '');
+    modifiedPath = modifiedPath.replace(/\.\//g, '');
 
-    fs.unlink(APP_DIR + '/' + link.params.inboxDir + "/" + modifiedPath, function (err) {
+    fs.unlink(APP_DIR + '/' + link.params.inboxDir + '/' + modifiedPath, function (err) {
         if (err) {
-            link.send(400, "Bad Request");
+            link.send(400, 'Bad Request');
             return;
         }
     });
@@ -346,13 +404,13 @@ exports.download = function (link) {
 
     if (!checkLink(link, true)) { return; }
 
-    var path = APP_DIR + '/' + link.params.inboxDir + "/" + link.data;
+    var path = APP_DIR + '/' + link.params.inboxDir + '/' + link.data;
 
     if(!path) { return; }
 
     link.res.writeHead(200, {
-        "Content-disposition": "attachment;filename='" + link.data + "'",
-        "Content-Type": "text/csv"
+        'Content-disposition': 'attachment;filename="' + link.data + '"',
+        'Content-Type': 'text/csv'
     });
 
     var filestream = fs.createReadStream(path);
@@ -368,27 +426,27 @@ exports.getColumns = function (link) {
 
     // separators
     var separators = {
-        "COMMA"     : ",",
-        "SEMICOLON" : ";",
-        "TAB"       : "\t",
-        "SPACE"     : " "
+        'COMMA'     : ',',
+        'SEMICOLON' : ';',
+        'TAB'       : '\t',
+        'SPACE'     : ' '
     };
 
     // create the read stream
     var readStream = fs.createReadStream(path);
 
     // initialize first line as empty string
-    var firstLine = "";
+    var firstLine = '';
     
     // on data
-    readStream.on("data", function (chunk) {
+    readStream.on('data', function (chunk) {
         
         // add chunk to firstLine
         firstLine += chunk;
 
         // if we have a new line, it means that
         // we've got the entire first line from file
-        var index = firstLine.indexOf("\n");
+        var index = firstLine.indexOf('\n');
 
         if (index !== -1) {
 
@@ -467,14 +525,14 @@ exports.getColumns = function (link) {
         }
     });
     
-    readStream.on("end", function () {
-        if (firstLine === "") {
-            return link.send(400, "Empty file");
+    readStream.on('end', function () {
+        if (firstLine === '') {
+            return link.send(400, 'Empty file');
         }
     });
     
     // handle errors
-    readStream.on("error", function (err) {
+    readStream.on('error', function (err) {
         return link.send(400, err);
     });
 };
@@ -485,13 +543,13 @@ function findValue (parent, dotNot) {
 
     if (!dotNot) return undefined;
 
-    var splits = dotNot.split(".");
+    var splits = dotNot.split('.');
     var value;
 
     for (var i = 0; i < splits.length; i++) {
         value = parent[splits[i]];
         if (value === undefined || value === null) return '';
-        if (typeof value === "object") parent = value;
+        if (typeof value === 'object') parent = value;
     }
 
     return value;
@@ -501,7 +559,7 @@ function findValue (parent, dotNot) {
 // TODO Handle quoted fields
 function getCSVSeparator (text) {
 
-    var possibleDelimiters = [";", ",", "\t"];
+    var possibleDelimiters = [';', ',', '\t'];
 
     return possibleDelimiters.filter(weedOut);
 
