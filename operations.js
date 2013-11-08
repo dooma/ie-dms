@@ -156,6 +156,23 @@ function getTemplate (templateId, role, callback) {
     });
 }
 
+function sendError (link, operation, msg) {
+
+    // let the client know we had an error
+    M.emit('sockets.send', {
+        dest: link.session._sid,
+        type: 'session',
+        event: 'ie',
+        data: {
+            operation: operation,
+            file: link.data.path,
+            template: link.data.template,
+            status: 'error',
+            message: msg
+        }
+    });
+}
+
 exports.import = function (link) {
 
     if (!checkLink(link, true)) { return; }
@@ -238,19 +255,9 @@ exports.import = function (link) {
             getTemplate(link.data.template, link.session.crudRole, function(err, data){
                 
                 if (err) {
-                    // let the client know we had an error
-                    M.emit('sockets.send', {
-                        dest: link.session._sid,
-                        type: 'session',
-                        event: 'ie',
-                        data: {
-                            operation: 'import',
-                            file: link.data.path,
-                            template: link.data.template,
-                            status: 'error',
-                            message: err.toString()
-                        }
-                    });
+                    //let the client know whe had am error
+                    sendError(link, 'import', err.toString());
+
                     return;
                 }
 
@@ -265,18 +272,8 @@ exports.import = function (link) {
 
                     if (err) {
                         // let the client know we had an error
-                        M.emit('sockets.send', {
-                            dest: link.session._sid,
-                            type: 'session',
-                            event: 'ie',
-                            data: {
-                                operation: 'import',
-                                file: link.data.path,
-                                template: link.data.template,
-                                status: 'error',
-                                message: err.toString()
-                            }
-                        });
+                        sendError(link, 'import', err.toString());
+
                         return;
                     }
 
@@ -388,18 +385,8 @@ exports.export = function (link) {
 
         if (err) {
             // let the client know we had an error
-            M.emit('sockets.send', {
-                dest: link.session._sid,
-                type: 'session',
-                event: 'ie',
-                data: {
-                    operation: 'export',
-                    file: filename,
-                    template: link.data.template,
-                    status: 'error',
-                    message: err.toString()
-                }
-            });
+            sendError(link, 'export', err.toString());
+
             return;
         }
 
