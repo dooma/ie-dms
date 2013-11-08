@@ -360,18 +360,20 @@ function appendFile (file) {
         self.emit('_showMappings');
     });
     $file.on('click', self.config['import'].ui.selectors.inboxFileDelete, function() {
-        var $thisFile = $(this).parents(self.config['import'].ui.selectors.file);
-        // only hide the file
-        $thisFile.hide();
-        // trigger a file deletion operations
-        self.emit('_deleteFile', $thisFile.find(ps).text(), function(err) {
-            // show back the file on error or remove on success
-            if (err) {
-                $thisFile.fadeIn();
-            } else {
-                $thisFile.remove();
-            }
-        });
+        if (confirm('Are you sure you want to delete this file?')) {
+            var $thisFile = $(this).parents(self.config['import'].ui.selectors.file);
+            // only hide the file
+            $thisFile.hide();
+            // trigger a file deletion operations
+            self.emit('_deleteFile', $thisFile.find(ps).text(), function(err) {
+                // show back the file on error or remove on success
+                if (err) {
+                    $thisFile.fadeIn();
+                } else {
+                    $thisFile.remove();
+                }
+            });
+        }
     });
     $file.on('click', self.config['import'].ui.selectors.inboxFileDownload, function () {
         self.emit('_download', path);
