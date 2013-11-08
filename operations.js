@@ -28,6 +28,44 @@ function checkLink (link, mustHaveData) {
     return true;
 }
 
+function arrayToObjectUpdate(data, schema, mappings, key, callback) {
+
+    var obj = {};
+    var keyValue;
+
+    for (var fieldKey in mappings) {
+
+        if (!data[mappings[fieldKey].value]) {
+            continue;
+        }
+
+        var operator = '$set';
+        if (schema[fieldKey].type === 'number' && mappings[fieldKey].operator === '$inc') {
+            operator = '$inc';
+        }
+
+        if (!obj[operator]) {
+                obj[operator] = {};
+        }
+
+        if (schema[fieldKey].type === 'string') {
+            obj[operator][fieldKey] = data[mappings[fieldKey].value];
+        } else if (schema[fieldKey].type === 'number') {
+            obj[operator][fieldKey] = parseInt(data[mappings[fieldKey].value]);
+        } else if (schema[fieldKey].type === 'date') {
+            obj[operator][fieldKey] = new Date(data[mappings[fieldKey].value]);
+        } else if (schema[fieldKey].type === 'boolean') {
+            obj[operator][fieldKey] = Boolean(data[mappings[fieldKey].value]);
+        }
+
+        if (fieldKey === key) {
+            keyValue = obj[operator][fieldKey];
+        }
+    }
+
+    callback(obj, keyValue);
+}
+
 function insertItem (item, templateId, role, callback) {
 
     item._tp = ObjectId(templateId);
@@ -41,6 +79,25 @@ function insertItem (item, templateId, role, callback) {
     };
 
     M.emit('crud.create', customRequest, callback);
+}
+
+function updateItem (item, keyValue, key, isUpsert, templateId, role, callback) {
+
+    item.$set._tp = ObjectId(templateId);
+    var query = {};
+    var customRequest = {
+        role: role,
+        templateId: ObjectId(templateId),
+        data: item,
+        options: {
+            upsert: isUpsert
+        },
+        method: 'update'
+    };
+    query[key] = keyValue;
+    customRequest.query = query;
+
+    M.emit('crud.update', customRequest, callback);
 }
 
 function arrayToObject (data, template, mappings) {
@@ -224,21 +281,45 @@ exports.import = function (link) {
                     }
 
                     if (row) {
+                        //if file contains headers skip first row
                         if (!link.data.headers || line > 0) {
-                            var object = arrayToObject(row, template, link.data.mappings);
-                            // add the import list to this item
-                            object._li = [results[0]._id];
+                            //check if update
+                            if (link.data.update) {
 
-                            insertItem(object, link.data.template, link.session.crudRole, function(err) {
-                                line++;
-                                if (err) {
-                                    errorCount++;
-                                } else {
-                                    itemCount++;
-                                }
+                                arrayToObjectUpdate(row, template.schema, link.data.mappings, link.data.key, function(obj, keyValue) {
 
-                                next();
-                            });
+                                    var object = obj;
+                                    // add the import list to this item
+                                    object.$addToSet = {};
+                                    object.$addToSet._li = results[0]._id;
+
+                                    updateItem(object, keyValue, link.data.key, link.data.upsert, link.data.template, link.session.crudRole, function(err) {
+                                        line++;
+                                        if (err) {
+                                            errorCount++;
+                                        } else {
+                                            itemCount++;
+                                        }
+
+                                        next();
+                                    });
+                                });
+                            } else {
+                                var object = arrayToObject(row, template, link.data.mappings);
+                                // add the import list to this item
+                                object._li = [results[0]._id];
+
+                                insertItem(object, link.data.template, link.session.crudRole, function(err) {
+                                    line++;
+                                    if (err) {
+                                        errorCount++;
+                                    } else {
+                                        itemCount++;
+                                    }
+
+                                    next();
+                                });
+                            }
                         } else if (link.data.headers && line == 0){
                             line++;
                             next();
