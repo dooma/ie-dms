@@ -382,7 +382,7 @@ exports.export = function (link) {
     link.send(200, 'OK');
 
     M.emit('crud.read', customRequest, function(err, resultCursor, resultCount) {
-
+        
         if (err) {
             // let the client know we had an error
             sendError(link, 'export', err.toString());
@@ -409,9 +409,13 @@ exports.export = function (link) {
             
             file.write(headers.slice(0, -1) + '\n');
         }
-
-        var stream = resultCursor.stream({ transform: createTransform() });
-
+        
+        if (resultCursor.constructor.name === "Array") {
+            // TODO array cursor handling
+        } else {
+            var stream = resultCursor.stream({ transform: createTransform() });
+        }
+        
         stream.pipe(file);
 
         stream.on('end', function () {
