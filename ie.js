@@ -33,7 +33,7 @@ module.exports = function (config) {
     }
     
     // process the import UI only if the configuration is present
-    if (self.config.import && self.config.import.ui) {
+    if (self.config['import'] && self.config['import'].ui) {
         ui_import.call(self);
         
         // run the binds
