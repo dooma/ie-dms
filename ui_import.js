@@ -224,13 +224,18 @@ function importData () {
     // getting required info
     var info = gatherInfo.call(self);
     
-    console.dir(info);
-    
     // calling server operation
     self.link('import', { data: info }, function (err) {
+        
+        var notificationMessage = {
+            de: "Importen startet.",
+            fr: "Impotaux startaux.",
+            it: "Importi starti."
+        }
+        
         self.emit('notifications.show', {
             type: err ? 'error' : 'info',
-            message: err ? err.error || err : 'Import started'
+            message: err ? err.error || err : notificationMessage[M.getLocale()]
         });
         self.emit('reset');
     });

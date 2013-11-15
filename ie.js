@@ -181,9 +181,15 @@ function startExport() {
             templateName = self['export'].template.name;
         }
         
+        var notificationMessage = {
+            de: "Export " + templateName + " startet und wird bald in der Inbox zur Verfügung stehen.",
+            fr: templateName + " french",
+            it: templateName + " italian"
+        };
+        
         self.emit('notifications.show', {
             type: err ? 'error' : 'info',
-            message: err ? err.error || err : (templateName + ' export started and will be available shortly in the import inbox.')
+            message: err ? err.error || err : notificationMessage[M.getLocale()]
         });
     });
     
