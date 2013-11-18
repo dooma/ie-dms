@@ -477,6 +477,13 @@ function showMappings (callback) {
         var $options = $('<div>');
         var firstLine = self.columns.lines[0];
 
+        // column translations
+        var COLUMN_TEXT = {
+            de : "Spalte",
+            fr : "Colonne",
+            it : "Colonna"
+        }
+
         for (var j = 0; j < firstLine.length; ++j) {
             // build a new jQuery option element
             var $option = $('<option>');
@@ -484,9 +491,9 @@ function showMappings (callback) {
             $option.attr('value', j);
             // and the label
             if (self.columns.hasHeaders) {
-                $option.text('Column ' + (j + 1) + (self.columns.headers[j] ? ' (' + self.columns.headers[j] + ')' : ''));
+                $option.text(COLUMN_TEXT[M.getLocale()] + ' ' + (j + 1) + (self.columns.headers[j] ? ' (' + self.columns.headers[j] + ')' : ''));
             } else {
-                $option.text('Column ' + (j + 1) + (firstLine[j] ? ' (' + firstLine[j] + ')' : ''));
+                $option.text(COLUMN_TEXT[M.getLocale()] + ' ' + (j + 1) + (firstLine[j] ? ' (' + firstLine[j] + ')' : ''));
             }
             // and finally, push it
             $options.append($option);
