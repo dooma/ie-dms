@@ -84,7 +84,6 @@ function startExport() {
     var self = this;
     
     self['export'] = self['export'] || {};
-    var filename = self.config['export'].ui.selectors.filename || {};
     
     if (!self.query) {
         alert('No data query set for export');
@@ -92,10 +91,6 @@ function startExport() {
     }
     if (!self['export'].template) {
         alert('No data template set for export');
-        return;
-    }
-    if (!$(filename).val()) {
-        alert('Filename not inserted');
         return;
     }
 
