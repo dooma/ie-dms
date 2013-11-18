@@ -412,6 +412,7 @@ exports.export = function (link) {
         
         if (resultCursor.constructor.name === "Array") {
             // TODO array cursor handling
+            return;
         } else {
             var stream = resultCursor.stream({ transform: createTransform() });
         }
