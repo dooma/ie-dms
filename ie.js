@@ -182,9 +182,9 @@ function startExport() {
         }
         
         var notificationMessage = {
-            de: "Export " + templateName + " startet und wird bald in der Inbox zur Verfügung stehen.",
-            fr: templateName + " french",
-            it: templateName + " italian"
+            de: "Export ist gestartet und wird bald in der Inbox zur Verfügung stehen.",
+            fr: "L'exportation est lancé et sera bientôt disponible in Inbox.",
+            it: "L'esportazione è lanciato e sarà presto disponibile in Inbox."
         };
         
         self.emit('notifications.show', {

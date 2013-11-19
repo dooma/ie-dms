@@ -50,12 +50,15 @@ function initUi () {
     }).disableSelection();
     
     // add more fields button
+    var hidedItems = true;
     $(".add-items").click(function () {
-        $(".other-fields-wrapper").slideDown(400);
-    });
-    
-    $(".cancel-add").click(function () {
-        $(".other-fields-wrapper").slideUp(400);
+        if (hidedItems) {
+            $(".other-fields-wrapper").slideDown(400);
+            hidedItems = false;
+        } else {
+            $(".other-fields-wrapper").slideUp(400);
+            hidedItems = true;
+        }
     });
     
     // separator change
