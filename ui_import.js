@@ -2,10 +2,10 @@ M.wrap('github/gabipetrovay/ie-dms/dev/ui_import.js', function (require, module,
 
 module.exports = function () {
     var self = this;
-    
+
     // no inbox
     self.config.noInbox = self.config.noInbox || false;
-    
+
     // process UI config
     self.config['import'].ui.selectors = self.config['import'].ui.selectors || {};
     self.config['import'].ui.selectors.waiter = self.config['import'].ui.selectors.waiter || '.waiter';
@@ -29,7 +29,7 @@ module.exports = function () {
     self.config['import'].ui.selectors.fieldSelectSel = self.config['import'].ui.selectors.fieldSelectSel || '.field-select';
     self.config['import'].ui.selectors.mappingImport = self.config['import'].ui.selectors.mappingImport || '.import-btn';
     self.config['import'].ui.selectors.fieldRequired = self.config['import'].ui.selectors.fieldRequired || '.required';
-    
+
     // the waiter
     self.$.waiter = $(self.config['import'].ui.selectors.waiter, self.dom);
 
@@ -60,7 +60,7 @@ module.exports = function () {
     $(self.dom).on('click', self.config['import'].ui.selectors.mappingBack, function() {
         self.emit('reset');
     });
-    
+
     $(self.dom).on('click', self.config['import'].ui.selectors.mappingImport, function () {
         self.emit('import');
     });
@@ -130,7 +130,7 @@ module.exports = function () {
             self.emit('_refreshTable');
             self.emit("_refreshFields");
         });
-        
+
     });
 
     // TODO remove hardcoded selectors
@@ -217,22 +217,22 @@ function setTemplate (templateId) {
     self.emit('_refreshFields');
     self.emit('_refreshTable');
 }
-    
+
 function importData () {
     var self = this;
-    
+
     // getting required info
     var info = gatherInfo.call(self);
-    
+
     // calling server operation
     self.link('import', { data: info }, function (err) {
-        
+
         var notificationMessage = {
             de: "Importen startet.",
             fr: "Impotaux startaux.",
             it: "Importi starti."
         }
-        
+
         self.emit('notifications.show', {
             type: err ? 'error' : 'info',
             message: err ? err.error || err : notificationMessage[M.getLocale()]
@@ -263,7 +263,7 @@ function refreshFields () {
     if (!self['import'].template) {
         return;
     }
-    
+
     // TODO Move to config
     var templateSel    = self.config['import'].ui.selectors.templateSel,
         nameSel        = self.config['import'].ui.selectors.nameSel,
@@ -328,12 +328,12 @@ function refreshFields () {
         if (fields[i].required) {
             $field.find(reqSel).show();
         }
-        
+
         // append options
         if (self.$.fieldOptions) {
             $(fieldSelectSel, $field).append(self.$.fieldOptions.clone()).attr('name', fields[i].key);
         }
-        
+
         if (fields[i].type === 'number') {
             $('.operator', $field).removeClass('hide');
         } else {
@@ -365,8 +365,13 @@ function appendFile (file) {
         self.emit('_showMappings');
     });
     $file.on('click', self.config['import'].ui.selectors.inboxFileDelete, function() {
-        if (confirm('Are you sure you want to delete this file?')) {
-            var $thisFile = $(this).parents(self.config['import'].ui.selectors.file);
+
+        var $thisFile = $(this).parents(self.config['import'].ui.selectors.file);
+
+        /*
+         *  This function is called after the confirm popup answer is `true`
+         * */
+        function deleteThisFile () {
             // only hide the file
             $thisFile.hide();
             // trigger a file deletion operations
@@ -378,6 +383,25 @@ function appendFile (file) {
                     $thisFile.remove();
                 }
             });
+        }
+
+        // create the English message
+        var deleteEnglishMessage = 'Are you sure you want to delete this file?';
+
+        // if module has i18n
+        if (!self.config.i18n) {
+            // emit message event for i18n module
+            self.emit("message", deleteEnglishMessage, function (err, translatedData) {
+                // get the translated message
+                if (confirm(translatedData.message)) {
+                    // if confirmed, call delete file function
+                    deleteThisFile();
+                }
+            });
+        // no i18n, show the Enlish message
+        } else if (confirm(deleteEnglishMessage)) {
+            // if confirmed, call delete file function
+            deleteThisFile();
         }
     });
     $file.on('click', self.config['import'].ui.selectors.inboxFileDownload, function () {
@@ -606,7 +630,7 @@ function gatherInfo () {
     var self = this;
     var info = {};
     var schema = self['import'].template.schema;
-    
+
     info.path = self.columnData.path;
     info.template = $(self.config['import'].ui.selectors.template).val();
     info.separator = self.columnData.separator || self.columns.separator;
@@ -616,19 +640,19 @@ function gatherInfo () {
     info.upsert = $("[name=upsert]:checked").length ? true : false;
     info.key = $("[name=mapping]:checked").closest(".form-group").find("select.field-select").attr("name") || "";
     info.mappings = self.mappings || {};
-    
+
     // if the update option is selected get the mapping
     if (info.update) {
-        
+
         var updateMappings = {};
         var fields = $(".field-select");
         for (var i = 0, l = fields.length; i < l; ++ i) {
-            
+
             var fieldVal = $(fields[i]).val();
-            
+
             if (fieldVal) {
                 var templateKey = $(fields[i]).attr("name");
-                
+
                 if (schema[templateKey].type === "number") {
                     var operator = $(fields[i]).closest(".form-group").find("div.operator>select").val();
                     updateMappings[templateKey] = { value: fieldVal, operator: operator};
@@ -639,8 +663,8 @@ function gatherInfo () {
         }
         info.mappings = updateMappings;
     }
-    
+
     return info;
 }
-    
+
 return module; });
