@@ -389,7 +389,7 @@ function appendFile (file) {
         var deleteEnglishMessage = 'Are you sure you want to delete this file?';
 
         // if module has i18n
-        if (!self.config.i18n) {
+        if (self.config.i18n) {
             // emit message event for i18n module
             self.emit("message", deleteEnglishMessage, function (err, translatedData) {
                 // get the translated message
