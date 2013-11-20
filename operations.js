@@ -101,7 +101,7 @@ function updateItem (item, keyValue, key, isUpsert, templateId, role, callback) 
 }
 
 function arrayToObject (data, template, mappings) {
-    
+
     var obj = {};
 
     for (var fieldKey in mappings) {
@@ -118,7 +118,7 @@ function arrayToObject (data, template, mappings) {
             curObj[splits[j]] = curObj[splits[j]] || {};
             curObj = curObj[splits[j]];
         }
-        
+
         if (curSchema[fieldKey].type === 'string') {
             curObj[splits[j]] = data[mappings[fieldKey]];
         } else if (curSchema[fieldKey].type === 'number') {
@@ -129,7 +129,7 @@ function arrayToObject (data, template, mappings) {
             curObj[splits[j]] = Boolean(data[mappings[fieldKey]]);
         }
     }
-    
+
     return obj;
 }
 
@@ -149,10 +149,10 @@ function getTemplate (templateId, role, callback) {
 
     //emit the request
     M.emit('crud.read', customRequest, function(err, data){
-        
+
         if (err) {callback(err, null); return;}
         callback(null, data[0]);
-            
+
     });
 }
 
@@ -194,7 +194,7 @@ exports.import = function (link) {
             link.send(400, JSON.stringify({error: err || 'Could not create import list'}));
             return;
         }
-        
+
         var updateRequest = {
             role: link.session.crudRole,
             templateId: ObjectId('000000000000000000000004'),
@@ -249,11 +249,11 @@ exports.import = function (link) {
                 // charset
                 charset: link.data.charset
             };
-            
+
             // get the current template
             var template;
             getTemplate(link.data.template, link.session.crudRole, function(err, data){
-                
+
                 if (err) {
                     //let the client know whe had am error
                     sendError(link, 'import', err.toString());
@@ -267,7 +267,7 @@ exports.import = function (link) {
                 var line = 0;
                 var itemCount = 0;
                 var errorCount = 0;
-                 
+
                 CSV.parse(path, options, function (err, row, next){
 
                     if (err) {
@@ -337,19 +337,19 @@ exports.import = function (link) {
                         });
                     }
                 });
-                
+
                 link.send(200, JSON.stringify({success: 'Data imported'}));
             });
-        
+
             //TODO give an appropriate notification message when the operation is complete
         });
     });
 };
 
 exports.export = function (link) {
-    
+
     if (!checkLink(link, true)) { return; }
-    
+
     try {
         var customRequest = {
             role: link.session.crudRole,
@@ -366,14 +366,14 @@ exports.export = function (link) {
     function createTransform () {
         return function (item) {
             var line = '';
-            
+
             for (var column in link.data.columns) {
                 var value = findValue(item, link.data.columns[column]);
                 value = value.toString().indexOf(link.data.separator) !== -1? '"' + value + '"' : value;
-                
+
                 line += value + link.data.separator;
             }
-            
+
             return line.slice(0, -1) + '\n';
         };
     }
@@ -382,7 +382,7 @@ exports.export = function (link) {
     link.send(200, 'OK');
 
     M.emit('crud.read', customRequest, function(err, resultCursor, resultCount) {
-        
+
         if (err) {
             // let the client know we had an error
             sendError(link, 'export', err.toString());
@@ -390,33 +390,45 @@ exports.export = function (link) {
             return;
         }
 
-        // TODO compute default file name also on server
-        var filename = link.data.filename || 'export';
-        if (filename.substr(-4) !== '.csv') {
-            filename += '.csv';
+        // get the file name provided, if it isn't provided make it an empty string
+        var filename = link.data.filename || "";
+
+        // if csv extension was provided, remove it!
+        // we take care about that
+        if (filename.substr(-4) === '.csv') {
+            filename = filename.substring(0, filename.lastIndexOf("."));
         }
 
-        // TODO create websafe name
+        // generate a filename like this: "export_YYYYMMDD_HHMM_original_file_name.csv"
+        // also, remove special characters and convert spaces in underscores
+        filename = "export_" +
+                   getYYYYMMDD_HHMMTime() +
+                   "_" +
+                   filename.replace(new RegExp("[^a-zA-Z0-9]+", "gi"), "")
+                           .replace(new RegExp("_", "g"), "_") +
+                   ".csv";
+
+        // create the write stream
         var file = fs.createWriteStream(APP_DIR + '/' + link.params.inboxDir + '/' + filename);
-        
+
         // write headers
         if (link.data.hasHeaders) {
             var headers = '';
-            
+
             for (var i = 0, l = link.data.columns.length; i < l; ++ i) {
                 headers += link.data.labels[link.data.columns[i]] + link.data.separator;
             }
-            
+
             file.write(headers.slice(0, -1) + '\n');
         }
-        
+
         if (resultCursor.constructor.name === "Array") {
             // TODO array cursor handling
             return;
         } else {
             var stream = resultCursor.stream({ transform: createTransform() });
         }
-        
+
         stream.pipe(file);
 
         stream.on('end', function () {
@@ -499,7 +511,7 @@ exports.download = function (link) {
 };
 
 exports.getColumns = function (link) {
-    
+
     if (!checkLink(link, true)) { return; }
 
     // the file path from inbox directory
@@ -518,10 +530,10 @@ exports.getColumns = function (link) {
 
     // initialize first line as empty string
     var firstLine = '';
-    
+
     // on data
     readStream.on('data', function (chunk) {
-        
+
         // add chunk to firstLine
         firstLine += chunk;
 
@@ -562,7 +574,7 @@ exports.getColumns = function (link) {
 
             // parse the file
             CSV.parse(path, options, function (err, row, next) {
-                
+
                 // handle error
                 if (err) { return link.send(400, err); }
 
@@ -605,13 +617,13 @@ exports.getColumns = function (link) {
             });
         }
     });
-    
+
     readStream.on('end', function () {
         if (firstLine === '') {
             return link.send(400, 'Empty file');
         }
     });
-    
+
     // handle errors
     readStream.on('error', function (err) {
         return link.send(400, err);
@@ -698,3 +710,27 @@ function getUpload(link, callback) {
     });
 }
 
+function getYYYYMMDD_HHMMTime() {
+
+    var date = new Date();
+
+    var hour = date.getHours();
+    hour = ((hour < 10 ? "0" : "") + hour).toString();
+
+    var min  = date.getMinutes();
+    min = ((min < 10 ? "0" : "") + min).toString();
+
+    var sec  = date.getSeconds();
+    sec = ((sec < 10 ? "0" : "") + sec).toString();
+
+    var year = date.getFullYear().toString();
+
+    var month = date.getMonth() + 1;
+    month = ((month < 10 ? "0" : "") + month).toString();
+
+    var day  = date.getDate();
+    day = ((day < 10 ? "0" : "") + day).toString();
+
+    return year + month + day + "_" + hour + min;
+
+}
