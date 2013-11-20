@@ -464,7 +464,7 @@ exports.readInbox = function (link) {
             inboxFiles.push({ path: files[i] });
         }
 
-        link.send(200, inboxFiles);
+        link.send(200, inboxFiles.sort());
     });
 
 };
