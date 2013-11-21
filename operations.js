@@ -391,22 +391,22 @@ exports.export = function (link) {
         }
 
         // get the file name provided, if it isn't provided make it an empty string
-        var filename = link.data.filename || "";
+        var filename = link.data.filename || '';
 
         // if csv extension was provided, remove it!
         // we take care about that
         if (filename.substr(-4) === '.csv') {
-            filename = filename.substring(0, filename.lastIndexOf("."));
+            filename = filename.substring(0, filename.lastIndexOf('.'));
         }
 
         // generate a filename like this: "export_YYYYMMDD_HHMM_original_file_name.csv"
         // also, remove special characters and convert spaces in underscores
-        filename = "export_" +
+        filename = 'export_' +
                    getYYYYMMDD_HHMMTime() +
-                   "_" +
-                   filename.replace(new RegExp("[^a-zA-Z0-9]+", "gi"), "")
-                           .replace(new RegExp("_", "g"), "_") +
-                   ".csv";
+                   '_' +
+                   filename.replace(new RegExp('[^a-zA-Z0-9]+', 'gi'), '')
+                           .replace(new RegExp('_', 'g'), '_') +
+                   '.csv';
 
         // create the write stream
         var file = fs.createWriteStream(APP_DIR + '/' + link.params.inboxDir + '/' + filename);
@@ -422,7 +422,7 @@ exports.export = function (link) {
             file.write(headers.slice(0, -1) + '\n');
         }
 
-        if (resultCursor.constructor.name === "Array") {
+        if (resultCursor.constructor.name === 'Array') {
             // TODO array cursor handling
             return;
         } else {
@@ -721,22 +721,22 @@ function getYYYYMMDD_HHMMTime() {
     var date = new Date();
 
     var hour = date.getHours();
-    hour = ((hour < 10 ? "0" : "") + hour).toString();
+    hour = ((hour < 10 ? '0' : '') + hour).toString();
 
     var min  = date.getMinutes();
-    min = ((min < 10 ? "0" : "") + min).toString();
+    min = ((min < 10 ? '0' : '') + min).toString();
 
     var sec  = date.getSeconds();
-    sec = ((sec < 10 ? "0" : "") + sec).toString();
+    sec = ((sec < 10 ? '0' : '') + sec).toString();
 
     var year = date.getFullYear().toString();
 
     var month = date.getMonth() + 1;
-    month = ((month < 10 ? "0" : "") + month).toString();
+    month = ((month < 10 ? '0' : '') + month).toString();
 
     var day  = date.getDate();
-    day = ((day < 10 ? "0" : "") + day).toString();
+    day = ((day < 10 ? '0' : '') + day).toString();
 
-    return year + month + day + "_" + hour + min;
+    return year + month + day + '_' + hour + min;
 
 }
