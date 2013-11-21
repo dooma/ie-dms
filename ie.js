@@ -58,8 +58,6 @@ function reset () {
 
     // export properties
     delete self.query;
-
-    // TODO when what else
 }
 
 function setTemplate (templateId) {
@@ -94,9 +92,6 @@ function startExport() {
         return;
     }
 
-    // TODO generate a token or let the user decide the name of
-    //      the export this is necessary for later reference
-    
     var columns = [];
     
     if (self['export'].columns) {
@@ -106,10 +101,10 @@ function startExport() {
             
             if (!self['export'].template.schema.hasOwnProperty(field)) continue;
             
-            // Skip keys that begin with "_"
-            if (field.toString().charAt(0) === "_") continue;
+            // Skip keys that begin with '_'
+            if (field.toString().charAt(0) === '_') continue;
             
-            if (!("hidden" in self['export'].template.schema[field])) {
+            if (!('hidden' in self['export'].template.schema[field])) {
                 columns.push(field);
             }
         }
@@ -121,8 +116,8 @@ function startExport() {
     
     for (var i = 0, l = columns.length; i < l; ++ i) {
         
-        if ("label" in self['export'].template.schema[columns[i]]) {
-            if (typeof self['export'].template.schema[columns[i]].label === "object") {
+        if ('label' in self['export'].template.schema[columns[i]]) {
+            if (typeof self['export'].template.schema[columns[i]].label === 'object') {
                 labels[columns[i]] = self['export'].template.schema[columns[i]].label[M.getLocale()];
             } else {
                 labels[columns[i]] = self['export'].template.schema[columns[i]].label;
@@ -132,9 +127,9 @@ function startExport() {
         }
     }
     
-    var templateName = "";
+    var templateName = '';
     
-    if (typeof self['export'].template.options.label === "object") {
+    if (typeof self['export'].template.options.label === 'object') {
         templateName += self['export'].template.options.label[M.getLocale()];
     } else {
         templateName += self['export'].template.options.label;
@@ -148,10 +143,10 @@ function startExport() {
     var timestamp = date.substr(0, 8) + '_' + date.substr(8, 4);
     
     var separators = {
-        "COMMA": ",",
-        "SEMICOLON": ";",
-        "TAB": "\t",
-        "SPACE": " "
+        'COMMA': ',',
+        'SEMICOLON': ';',
+        'TAB': '\t',
+        'SPACE': ' '
     };
     
     var options = {
@@ -162,8 +157,8 @@ function startExport() {
             hasHeaders: self['export'].headers || false,
             columns: columns,
             labels: labels,
-            separator: separators[self['export'].separator]  || ";",
-            filename: self['export'].filename || "export_" + templateName.toLowerCase().replace(" ", "_") + "_" + timestamp
+            separator: separators[self['export'].separator]  || ';',
+            filename: self['export'].filename || templateName.toLowerCase().replace(' ', '_')
         }
     }
     
@@ -182,9 +177,9 @@ function startExport() {
         }
         
         var notificationMessage = {
-            de: "Export ist gestartet und wird bald in der Inbox zur Verfügung stehen.",
-            fr: "L'exportation est lancé et sera bientôt disponible in Inbox.",
-            it: "L'esportazione è lanciato e sarà presto disponibile in Inbox."
+            de: 'Export ist gestartet und wird bald in der Inbox zur Verfügung stehen.',
+            fr: 'L\'exportation est lancé et sera bientôt disponible in Inbox.',
+            it: 'L\'esportazione è lanciato e sarà presto disponibile in Inbox.'
         };
         
         self.emit('notifications.show', {
