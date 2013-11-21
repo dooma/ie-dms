@@ -404,7 +404,7 @@ exports.export = function (link) {
         filename = 'export_' +
                    getYYYYMMDD_HHMMTime() +
                    '_' +
-                   filename.replace(new RegExp('[^a-zA-Z0-9_ ]+', 'g'), '')
+                   filename.replace(new RegExp('[^a-zA-Z0-9\\-\\._ ]+', 'g'), '')
                            .replace(new RegExp(' ', 'g'), '_') +
                    '.csv';
 
