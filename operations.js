@@ -464,9 +464,15 @@ exports.readInbox = function (link) {
             inboxFiles.push({ path: files[i] });
         }
 
-        link.send(200, inboxFiles.sort());
-    });
+        // sort the files in reverse order
+        inboxFiles.sort(function(a, b) {
+            if (a.path > b.path) return -1;
+            if (a.path < b.path) return 1;
+            return 0;
+        });
 
+        link.send(200, inboxFiles);
+    });
 };
 
 exports.deleteFile = function (link) {
