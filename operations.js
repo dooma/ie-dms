@@ -357,6 +357,7 @@ exports.export = function (link) {
             query: link.data.query,
             data: {},
             options: {},
+            noJoins: true,
             method: 'read'
         };
     } catch (err) {
