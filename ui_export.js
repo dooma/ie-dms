@@ -1,11 +1,9 @@
-M.wrap('github/gabipetrovay/ie-dms/dev/ui_export.js', function (require, module, exports) {
-
 module.exports = function () {
     var self = this;
-    
+
     // processing export global config
     self['export'] = self['export'] || {};
-    
+
     // processing UI config
     self.config['export'].ui.selectors = self.config['export'].ui.selectors || {};
     self.config['export'].ui.selectors.hideUi = self.config['export'].ui.selectors.hideUi || ".close";
@@ -20,27 +18,27 @@ module.exports = function () {
     self.config['export'].ui.selectors.headers = self.config['export'].ui.selectors.headers || "#headers";
     self.config['export'].ui.selectors.email = self.config['export'].ui.selectors.email || "#email";
     self.config['export'].ui.selectors.separator = self.config['export'].ui.selectors.separator || "#separator";
-    
+
     // configure internal events
-    
+
     // configure external events
     self.on('reset', reset);
     self.on('showUi', showUi);
     self.on('hideUi', hideUi);
     self.on('setExportFields', setFields);
-    
+
     // configure UI
     initUi.call(self);
 }
 
 function initUi () {
     var self = this;
-    
+
     // hide UI config
     $(document).on("click", self.config['export'].ui.selectors.hideUi, function () {
         hideUi.call(self);
     });
-    
+
     // sortable lists
     $(self.config['export'].ui.selectors.exportList + ", " + self.config['export'].ui.selectors.otherList).sortable({
         connectWith: self.config['export'].ui.selectors.listsClass,
@@ -48,7 +46,7 @@ function initUi () {
             updateFields.call(self);
         }
     }).disableSelection();
-    
+
     // add more fields button
     var hidedItems = true;
     $(".add-items").click(function () {
@@ -60,7 +58,7 @@ function initUi () {
             hidedItems = true;
         }
     });
-    
+
     // separator change
     $("#separator").change(function () {
         var separators = {
@@ -73,7 +71,7 @@ function initUi () {
         $(".item-separator").html(separators[mySeparator]);
         self['export'].separator = mySeparator;
     });
-    
+
     // headers checkbox
     $(self.config['export'].ui.selectors.headers).change(function () {
         if ($(this).is(":checked")) {
@@ -82,7 +80,7 @@ function initUi () {
             self['export'].headers = false;
         }
     });
-    
+
     // email checkbox
     $(self.config['export'].ui.selectors.email).change(function () {
         if ($(this).is(":checked")) {
@@ -91,30 +89,30 @@ function initUi () {
             self['export'].email = false;
         }
     });
-    
+
     // filename change
     $(self.config['export'].ui.selectors.filename).keyup(function () {
         self['export'].filename = $(this).val();
     });
 }
-    
+
 function showUi () {
     var self = this;
     $(self.config['export'].ui.selectors.target).fadeIn(100);
 }
-    
+
 function hideUi () {
     var self = this;
-    $(self.config['export'].ui.selectors.target).fadeOut(100);    
+    $(self.config['export'].ui.selectors.target).fadeOut(100);
 }
 
 function updateFields () {
     var self = this;
 
     self['export'].columns = [];
-    
+
     var lis = $(self.config['export'].ui.selectors.exportList + ">li");
-    
+
     for(var i = 1, l = lis.length; i < l; ++ i) {
         var field = $(lis[i]).attr("data-field");
         self['export'].columns.push(field);
@@ -123,50 +121,50 @@ function updateFields () {
 
 function reset () {
     var self = this;
-    
+
     // reseting form
     $(self.config['export'].ui.selectors.filename).val("");
     $(self.config['export'].ui.selectors.headers).prop('checked', false);
     $(self.config['export'].ui.selectors.email).prop('checked', false);
     $(self.config['export'].ui.selectors.separator).val("COMMA");
     $(self.config['export'].ui.selectors.listSeparator).html(",");
-    
+
     // reset export config
     self['export'].columns = [];
     self['export'].separator = "COMMA";
     self['export'].headers = false;
     self['export'].email = false;
-    
+
     // reseting list UI
     var fieldTemplateExport = $(self.config['export'].ui.selectors.exportList + " " + self.config['export'].ui.selectors.listTemplate).clone();
 
     $(self.config['export'].ui.selectors.exportList).html("");
     $(self.config['export'].ui.selectors.exportList).append(fieldTemplateExport);
-    
+
     var fieldTemplateOther = $(self.config['export'].ui.selectors.otherList + " " + self.config['export'].ui.selectors.listTemplate).clone();
-    
+
     $(self.config['export'].ui.selectors.otherList).html("");
     $(self.config['export'].ui.selectors.otherList).append(fieldTemplateOther);
 }
-    
+
 function setFields (template) {
     var self = this;
     self['export'].template = template;
     var tableFields = [];
     var otherFields = [];
-    
+
     // reseting UI
     reset.call(self);
-    
+
     // TODO handle undefined variable
-    
+
     for (var field in template.schema) {
-        
+
         if (!template.schema.hasOwnProperty(field)) continue;
-        
+
         // Skip keys that begin with "_"
         if (field.toString().charAt(0) === "_") continue;
-        
+
         if ("hidden" in template.schema[field] && template.schema[field].hidden) {
             var myField = {};
             if ("label" in template.schema[field]) {
@@ -203,7 +201,7 @@ function setFields (template) {
     // update export UI
     var exportFieldTemplate = $(self.config['export'].ui.selectors.exportList + " " +  self.config['export'].ui.selectors.listTemplate);
     var otherFieldTemplate = $(self.config['export'].ui.selectors.otherList + " " + self.config['export'].ui.selectors.listTemplate);
-    
+
     for(var i = 0, l = tableFields.length; i < l; ++ i) {
         var myField = exportFieldTemplate.clone();
         myField.removeClass("hided").removeClass("field-template").attr("data-field", tableFields[i].field);
@@ -216,10 +214,7 @@ function setFields (template) {
         myField.find(self.config['export'].ui.selectors.listItem).html(otherFields[i].label);
         $(self.config['export'].ui.selectors.otherList).append(myField);
     }
-    
+
     // get columns
     updateFields.call(self);
 }
-
-return module; });
-    

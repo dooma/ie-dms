@@ -1,5 +1,3 @@
-M.wrap('github/gabipetrovay/ie-dms/dev/ie.js', function (require, module, exports) {
-
 var ui_export = require('./ui_export');
 var ui_import = require('./ui_import');
 var Bind = require('github/jillix/bind');
@@ -25,21 +23,21 @@ module.exports = function (config) {
     // process the export UI only if the configuration is present
     if (self.config['export'] && self.config['export'].ui) {
         ui_export.call(self);
-        
+
         // run the binds
         for (var i = 0; i < self.config.binds.length; ++i) {
             Bind.call(self, self.config.binds[i]);
-        } 
+        }
     }
-    
+
     // process the import UI only if the configuration is present
     if (self.config['import'] && self.config['import'].ui) {
         ui_import.call(self);
-        
+
         // run the binds
         for (var i = 0; i < self.config.binds.length; ++i) {
             Bind.call(self, self.config.binds[i]);
-        } 
+        }
     }
 
     // start by getting all the templates
@@ -80,9 +78,9 @@ function setQuery (query, options) {
 
 function startExport() {
     var self = this;
-    
+
     self['export'] = self['export'] || {};
-    
+
     if (!self.query) {
         alert('No data query set for export');
         return;
@@ -93,29 +91,29 @@ function startExport() {
     }
 
     var columns = [];
-    
+
     if (self['export'].columns) {
         columns = self['export'].columns;
     } else {
         for (var field in self['export'].template.schema) {
-            
+
             if (!self['export'].template.schema.hasOwnProperty(field)) continue;
-            
+
             // Skip keys that begin with '_'
             if (field.toString().charAt(0) === '_') continue;
-            
+
             if (!('hidden' in self['export'].template.schema[field])) {
                 columns.push(field);
             }
         }
     }
-    
+
     // get the labels for the columns
-    
+
     var labels = {};
-    
+
     for (var i = 0, l = columns.length; i < l; ++ i) {
-        
+
         if ('label' in self['export'].template.schema[columns[i]]) {
             if (typeof self['export'].template.schema[columns[i]].label === 'object') {
                 labels[columns[i]] = self['export'].template.schema[columns[i]].label[M.getLocale()];
@@ -126,29 +124,29 @@ function startExport() {
             labels[columns[i]] = columns[i];
         }
     }
-    
+
     var templateName = '';
-    
+
     if (typeof self['export'].template.options.label === 'object') {
         templateName += self['export'].template.options.label[M.getLocale()];
     } else {
         templateName += self['export'].template.options.label;
     }
-    
+
     if (!templateName) {
         templateName = self['export'].template.name;
     }
-    
+
     var date = new Date().toISOString().replace(/[^\d]/g, '');
     var timestamp = date.substr(0, 8) + '_' + date.substr(8, 4);
-    
+
     var separators = {
         'COMMA': ',',
         'SEMICOLON': ';',
         'TAB': '\t',
         'SPACE': ' '
     };
-    
+
     var options = {
         data: {
             template: self['export'].template._id,
@@ -161,7 +159,7 @@ function startExport() {
             filename: self['export'].filename || templateName.toLowerCase().replace(' ', '_')
         }
     }
-    
+
     self.link('export', options, function(err) {
 
         // give it a name
@@ -175,19 +173,19 @@ function startExport() {
         if (!templateName) {
             templateName = self['export'].template.name;
         }
-        
+
         var notificationMessage = {
             de: 'Export ist gestartet und wird bald in der Inbox zur Verfügung stehen.',
             fr: 'L\'exportation est lancé et sera bientôt disponible in Inbox.',
             it: 'L\'esportazione è lanciato e sarà presto disponibile in Inbox.'
         };
-        
+
         self.emit('notifications.show', {
             type: err ? 'error' : 'info',
             message: err ? err.error || err : notificationMessage[M.getLocale()]
         });
     });
-    
+
     // hiding the UI
     self.emit('hideUi');
 }
@@ -234,6 +232,3 @@ function getTemplates () {
         return;
     });
 }
-
-
-return module; });

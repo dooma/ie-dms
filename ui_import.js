@@ -1,5 +1,3 @@
-M.wrap('github/gabipetrovay/ie-dms/dev/ui_import.js', function (require, module, exports) {
-
 module.exports = function () {
     var self = this;
 
@@ -666,5 +664,3 @@ function gatherInfo () {
 
     return info;
 }
-
-return module; });
