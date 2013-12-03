@@ -402,11 +402,30 @@ exports.export = function (link) {
 
         // generate a filename like this: "export_YYYYMMDD_HHMM_original_file_name.csv"
         // also, remove special characters and convert spaces in underscores
+
+        var replaces = {
+            'ä': 'ae',    'ú': 'u',     'î': 'i',     'ï': 'i',
+            'ö': 'oe',    'ó': 'o',     'ë': 'e',     'ô': 'o',
+            'ü': 'ue',    'ò': 'o',     'ê': 'e',     'ù': 'u',
+            'ß': 'ss',    'í': 'i',     'è': 'e',     'û': 'u',
+            'à': 'a',     'ì': 'i',     'é': 'e',     'ÿ': 'y',
+            'â': 'a',     'ç': 'c'
+        };
+
         filename = 'export_' +
                    getYYYYMMDD_HHMMTime() +
                    '_' +
-                   filename.replace(new RegExp('[^a-zA-Z0-9\\-\\._ ]+', 'g'), '')
-                           .replace(new RegExp(' ', 'g'), '_') +
+                   filename.replace(new RegExp('[^a-zA-Z0-9\\-\\._ ]+', 'g'), function (char) {
+                        var result = '';
+
+                        for (var i = 0; i < char.length; ++ i) {
+                            if (replaces[char[i]]) {
+                                result += replaces[char[i]];
+                            }
+                        }
+
+                        return result;
+                   }).replace(new RegExp(' ', 'g'), '_') +
                    '.csv';
 
         // create the write stream
