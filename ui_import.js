@@ -166,7 +166,6 @@ function readInbox () {
         }
 
         self.inbox = files;
-        console.dir(files);
 
         // no need to continue if we don't have a file container
         if (!self.$.files.length) {
