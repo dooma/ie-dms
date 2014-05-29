@@ -357,7 +357,6 @@ exports.export = function (link) {
             query: link.data.query,
             data: {},
             options: {},
-            noJoins: true,
             method: 'read'
         };
     } catch (err) {
@@ -443,15 +442,12 @@ exports.export = function (link) {
         }
 
         if (resultCursor.constructor.name === 'Array') {
-            // TODO array cursor handling
-            return;
-        } else {
-            var stream = resultCursor.stream({ transform: createTransform() });
-        }
+            var transform = createTransform();
 
-        stream.pipe(file);
+            for (var i in resultCursor) {
+                file.write(transform(resultCursor[i]));
+            }
 
-        stream.on('end', function () {
             // let the client know we are done
             M.emit('sockets.send', {
                 dest: link.session._sid,
@@ -464,7 +460,26 @@ exports.export = function (link) {
                     count: resultCount
                 }
             });
-        });
+        } else {
+            var stream = resultCursor.stream({ transform: createTransform() });
+
+            stream.pipe(file);
+
+            stream.on('end', function () {
+                // let the client know we are done
+                M.emit('sockets.send', {
+                    dest: link.session._sid,
+                    type: 'session',
+                    event: 'ie',
+                    data: {
+                        operation: 'export',
+                        file: filename,
+                        template: link.data.template,
+                        count: resultCount
+                    }
+                });
+            });
+        }
     });
 };
 
