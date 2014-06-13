@@ -6,8 +6,8 @@
         "/ie.js",
         "/ui_export.js",
         "/ui_import.js",
-        "github/jillix/bind/v0.2.1",
-        "github/jillix/events/v0.1.8"
+        "github/jillix/bind/v0.2.2",
+        "github/jillix/events/v0.1.11"
     ],
     "operations": [
         { "file": "operations.js", "function": "readInbox" },
