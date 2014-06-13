@@ -144,7 +144,8 @@ function getTemplate (templateId, role, callback) {
         },
         data: {},
         options: {},
-        method: 'read'
+        method: 'read',
+        noCursor: true
     };
 
     //emit the request
@@ -386,7 +387,6 @@ exports.export = function (link) {
         if (err) {
             // let the client know we had an error
             sendError(link, 'export', err.toString());
-
             return;
         }
 
