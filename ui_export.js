@@ -35,12 +35,12 @@ function initUi () {
     var self = this;
 
     // hide UI config
-    $(document).on("click", self.config['export'].ui.selectors.hideUi, function () {
+    $(document).on('click', self.config['export'].ui.selectors.hideUi, function () {
         hideUi.call(self);
     });
 
     // sortable lists
-    $(self.config['export'].ui.selectors.exportList + ", " + self.config['export'].ui.selectors.otherList).sortable({
+    $(self.config['export'].ui.selectors.exportList + ', ' + self.config['export'].ui.selectors.otherList).sortable({
         connectWith: self.config['export'].ui.selectors.listsClass,
         stop: function(event, ui) {
             updateFields.call(self);
@@ -123,27 +123,27 @@ function reset () {
     var self = this;
 
     // reseting form
-    $(self.config['export'].ui.selectors.filename).val("");
+    $(self.config['export'].ui.selectors.filename).val('');
     $(self.config['export'].ui.selectors.headers).prop('checked', false);
     $(self.config['export'].ui.selectors.email).prop('checked', false);
-    $(self.config['export'].ui.selectors.separator).val("COMMA");
-    $(self.config['export'].ui.selectors.listSeparator).html(",");
+    $(self.config['export'].ui.selectors.separator).val('COMMA');
+    $(self.config['export'].ui.selectors.listSeparator).html(',');
 
     // reset export config
     self['export'].columns = [];
-    self['export'].separator = "COMMA";
+    self['export'].separator = 'COMMA';
     self['export'].headers = false;
     self['export'].email = false;
 
     // reseting list UI
-    var fieldTemplateExport = $(self.config['export'].ui.selectors.exportList + " " + self.config['export'].ui.selectors.listTemplate).clone();
+    var fieldTemplateExport = $(self.config['export'].ui.selectors.exportList + ' ' + self.config['export'].ui.selectors.listTemplate).clone();
 
-    $(self.config['export'].ui.selectors.exportList).html("");
+    $(self.config['export'].ui.selectors.exportList).html('');
     $(self.config['export'].ui.selectors.exportList).append(fieldTemplateExport);
 
-    var fieldTemplateOther = $(self.config['export'].ui.selectors.otherList + " " + self.config['export'].ui.selectors.listTemplate).clone();
+    var fieldTemplateOther = $(self.config['export'].ui.selectors.otherList + ' ' + self.config['export'].ui.selectors.listTemplate).clone();
 
-    $(self.config['export'].ui.selectors.otherList).html("");
+    $(self.config['export'].ui.selectors.otherList).html('');
     $(self.config['export'].ui.selectors.otherList).append(fieldTemplateOther);
 }
 
@@ -160,15 +160,24 @@ function setFields (template) {
 
     for (var field in template.schema) {
 
-        if (!template.schema.hasOwnProperty(field)) continue;
+        if (!template.schema.hasOwnProperty(field)) {
+            continue;
+        }
 
-        // Skip keys that begin with "_"
-        if (field.toString().charAt(0) === "_") continue;
+        // skip keys that begin with _
+        if (field.toString().charAt(0) === '_') {
+            continue;
+        }
 
-        if ("hidden" in template.schema[field] && template.schema[field].hidden) {
+        // skip fields that are hidden and non-searchable
+        if (template.schema[field].hidden && template.schema[field].noSearch) {
+            continue;
+        }
+
+        if (template.schema[field].hidden) {
             var myField = {};
-            if ("label" in template.schema[field]) {
-                if (typeof template.schema[field].label === "object") {
+            if ('label' in template.schema[field]) {
+                if (typeof template.schema[field].label === 'object') {
                     myField.label = template.schema[field].label[M.getLocale()];
                     myField.field = field;
                 } else {
@@ -182,8 +191,8 @@ function setFields (template) {
             otherFields.push(myField);
         } else {
             var myField = {};
-            if ("label" in template.schema[field]) {
-                if (typeof template.schema[field].label === "object") {
+            if ('label' in template.schema[field]) {
+                if (typeof template.schema[field].label === 'object') {
                     myField.label = template.schema[field].label[M.getLocale()];
                     myField.field = field;
                 } else {
@@ -199,18 +208,18 @@ function setFields (template) {
     }
 
     // update export UI
-    var exportFieldTemplate = $(self.config['export'].ui.selectors.exportList + " " +  self.config['export'].ui.selectors.listTemplate);
-    var otherFieldTemplate = $(self.config['export'].ui.selectors.otherList + " " + self.config['export'].ui.selectors.listTemplate);
+    var exportFieldTemplate = $(self.config['export'].ui.selectors.exportList + ' ' +  self.config['export'].ui.selectors.listTemplate);
+    var otherFieldTemplate = $(self.config['export'].ui.selectors.otherList + ' ' + self.config['export'].ui.selectors.listTemplate);
 
     for(var i = 0, l = tableFields.length; i < l; ++ i) {
         var myField = exportFieldTemplate.clone();
-        myField.removeClass("hided").removeClass("field-template").attr("data-field", tableFields[i].field);
+        myField.removeClass('hided').removeClass('field-template').attr('data-field', tableFields[i].field);
         myField.find(self.config['export'].ui.selectors.listItem).html(tableFields[i].label);
         $(self.config['export'].ui.selectors.exportList).append(myField);
     }
     for(var i = 0, l = otherFields.length; i < l; ++ i) {
         var myField = otherFieldTemplate.clone();
-        myField.removeClass("hided").removeClass("field-template").attr("data-field", otherFields[i].field);
+        myField.removeClass('hided').removeClass('field-template').attr('data-field', otherFields[i].field);
         myField.find(self.config['export'].ui.selectors.listItem).html(otherFields[i].label);
         $(self.config['export'].ui.selectors.otherList).append(myField);
     }
@@ -218,3 +227,4 @@ function setFields (template) {
     // get columns
     updateFields.call(self);
 }
+
