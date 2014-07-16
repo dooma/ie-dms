@@ -370,7 +370,13 @@ exports.export = function (link) {
 
             for (var column in link.data.columns) {
                 var value = findValue(item, link.data.columns[column]);
-                value = value.toString().indexOf(link.data.separator) !== -1? '"' + value + '"' : value;
+
+                // handle date
+                if (value instanceof Date) {
+                    value = value.toISOString();
+                } else {
+                    value = value.toString().indexOf(link.data.separator) !== -1? '"' + value + '"' : value;
+                }
 
                 line += value + link.data.separator;
             }
@@ -443,7 +449,6 @@ exports.export = function (link) {
 
         if (resultCursor.constructor.name === 'Array') {
             var transform = createTransform();
-
             for (var i in resultCursor) {
                 file.write(transform(resultCursor[i]));
             }
@@ -462,7 +467,6 @@ exports.export = function (link) {
             });
         } else {
             var stream = resultCursor.stream({ transform: createTransform() });
-
             stream.pipe(file);
 
             stream.on('end', function () {
