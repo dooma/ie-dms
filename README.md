@@ -8,6 +8,9 @@ Import-Export module for DMS application
 ### dev
  - add new fixes and features here
 
+### v0.2.0
+ - Updated deps
+
 ### v0.1.4
  - Added the new `noCursor` CRUD read request option when searching for templates
  - Upgrade to Events `v0.1.11` and Bind `v0.2.2`
