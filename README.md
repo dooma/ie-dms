@@ -8,6 +8,9 @@ Import-Export module for DMS application
 ### dev
  - add new fixes and features here
 
+### v0.2.1
+ - Updated to Bind `v0.3.1`
+
 ### v0.2.0
  - Updated deps
 

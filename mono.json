@@ -1,12 +1,12 @@
 {
     "source": "github",
-    "owner": "Jillix",
+    "owner": "jillix",
     "name": "ie-dms",
     "dependencies": [
         "/ie.js",
         "/ui_export.js",
         "/ui_import.js",
-        "github/jillix/bind/v0.3.0",
+        "github/jillix/bind/v0.3.1",
         "github/jillix/events/v0.3.0"
     ],
     "operations": [
