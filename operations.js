@@ -576,6 +576,76 @@ exports.getColumns = function (link) {
     // initialize first line as empty string
     var firstLine = '';
 
+    function parseFile () {
+
+        // how many lines?
+        var l = parseInt(link.data.lineCount) || 10;
+
+        // separator
+        var s = link.data.separator || getCSVSeparator(firstLine)[0];
+        s = separators[s] || s;
+
+        // charset
+        var c = link.data.charset || Charset.detect(firstLine).encoding;
+
+        // force hasHeaders to be boolean
+        link.data.hasHeaders = link.data.hasHeaders ? true : false;
+
+        // set parse options
+        var options = {
+            delimiter: s,
+            charset: c
+        };
+
+        var i = 0;
+        var lines = [];
+        var headers;
+
+        // parse the file
+        CSV.parse(path, options, function (err, row, next) {
+
+            // handle error
+            if (err) { return link.send(400, err); }
+
+            // push line or set headers
+            if (link.data.hasHeaders && i === 0) {
+                headers = row;
+            }
+            // row exits, push it
+            else if (row) {
+                lines.push(row);
+            // row is null, that means that we've read the entire file
+            } else {
+                l = i;
+            }
+
+            // go to next line
+            if (++i < l) {
+                next();
+            }
+            else {
+                // set mappings obj
+                var mappings = {
+                    // the read lines
+                    lines: lines,
+                    // separator
+                    separator: s,
+                    // charset
+                    charset: c,
+                    // how many lines
+                    lineCount: l,
+                    // the headers (an array or undefined)
+                    headers: headers,
+                    // hasHeaders: boolean
+                    hasHeaders: link.data.hasHeaders
+                };
+
+                // send response
+                link.send(200, mappings);
+            }
+        });
+    }
+
     // on data
     readStream.on('data', function (chunk) {
 
@@ -586,86 +656,23 @@ exports.getColumns = function (link) {
         // we've got the entire first line from file
         var index = firstLine.indexOf('\n');
 
+        // end stream if the new line has been found
         if (index !== -1) {
-
-            // end stream
-            readStream.close();
-
             // substring it!
             firstLine = firstLine.substring(0, index);
 
-            // how many lines?
-            var l = parseInt(link.data.lineCount) || 10;
-
-            // separator
-            var s = link.data.separator || getCSVSeparator(firstLine)[0];
-            s = separators[s] || s;
-
-            // charset
-            var c = link.data.charset || Charset.detect(firstLine).encoding;
-
-            // force hasHeaders to be boolean
-            link.data.hasHeaders = link.data.hasHeaders ? true : false;
-
-            // set parse options
-            var options = {
-                delimiter: s,
-                charset: c
-            };
-
-            var i = 0;
-            var lines = [];
-            var headers;
-
-            // parse the file
-            CSV.parse(path, options, function (err, row, next) {
-
-                // handle error
-                if (err) { return link.send(400, err); }
-
-                // push line or set headers
-                if (link.data.hasHeaders && i === 0) {
-                    headers = row;
-                }
-                // row exits, push it
-                else if (row) {
-                    lines.push(row);
-                // row is null, that means that we've read the entire file
-                } else {
-                    l = i;
-                }
-
-                // go to next line
-                if (++i < l) {
-                    next();
-                }
-                else {
-                    // set mappings obj
-                    var mappings = {
-                        // the read lines
-                        lines: lines,
-                        // separator
-                        separator: s,
-                        // charset
-                        charset: c,
-                        // how many lines
-                        lineCount: l,
-                        // the headers (an array or undefined)
-                        headers: headers,
-                        // hasHeaders: boolean
-                        hasHeaders: link.data.hasHeaders
-                    };
-
-                    // send response
-                    link.send(200, mappings);
-                }
-            });
+            // end stream
+            readStream.close();
         }
     });
 
     readStream.on('end', function () {
         if (firstLine === '') {
             return link.send(400, 'Empty file');
+        } else {
+          // parse the file if end of file and file not parsed yet
+
+          parseFile();
         }
     });
 

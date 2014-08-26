@@ -419,6 +419,11 @@ function setTemplates () {
 
         var value = templateId;
         var name = self.templates[templateId].options.label[M.getLocale()] || self.templates[templateId].options.label;
+
+        if (self.templates[templateId].options.group) {
+            name = self.templates[templateId].options.group + " - " + name;
+        }
+
         var $option = $('<option>').attr('value', value).text(name);
         $options.append($option);
     }
