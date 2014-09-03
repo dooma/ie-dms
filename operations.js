@@ -279,19 +279,37 @@ exports.import = function (link) {
                     }
 
                     if (row) {
-                        //if file contains headers skip first row
-                        if (!link.data.headers || line > 0) {
-                            //check if update
-                            if (link.data.update) {
+                        // avoid empty row
+                        if (row.length) {
+                            //if file contains headers skip first row
+                            if (!link.data.headers || line > 0) {
+                                //check if update
+                                if (link.data.update) {
 
-                                arrayToObjectUpdate(row, template.schema, link.data.mappings, link.data.key, function(obj, keyValue) {
+                                    arrayToObjectUpdate(row, template.schema, link.data.mappings, link.data.key, function(obj, keyValue) {
 
-                                    var object = obj;
+                                        var object = obj;
+                                        // add the import list to this item
+                                        object.$addToSet = {};
+                                        object.$addToSet._li = results[0]._id;
+
+                                        updateItem(object, keyValue, link.data.key, link.data.upsert, link.data.template, link.session.crudRole, function(err) {
+                                            line++;
+                                            if (err) {
+                                                errorCount++;
+                                            } else {
+                                                itemCount++;
+                                            }
+
+                                            next();
+                                        });
+                                    });
+                                } else {
+                                    var object = arrayToObject(row, template, link.data.mappings);
                                     // add the import list to this item
-                                    object.$addToSet = {};
-                                    object.$addToSet._li = results[0]._id;
+                                    object._li = [results[0]._id];
 
-                                    updateItem(object, keyValue, link.data.key, link.data.upsert, link.data.template, link.session.crudRole, function(err) {
+                                    insertItem(object, link.data.template, link.session.crudRole, function(err) {
                                         line++;
                                         if (err) {
                                             errorCount++;
@@ -301,25 +319,12 @@ exports.import = function (link) {
 
                                         next();
                                     });
-                                });
-                            } else {
-                                var object = arrayToObject(row, template, link.data.mappings);
-                                // add the import list to this item
-                                object._li = [results[0]._id];
-
-                                insertItem(object, link.data.template, link.session.crudRole, function(err) {
-                                    line++;
-                                    if (err) {
-                                        errorCount++;
-                                    } else {
-                                        itemCount++;
-                                    }
-
-                                    next();
-                                });
+                                }
+                            } else if (link.data.headers && line == 0){
+                                line++;
+                                next();
                             }
-                        } else if (link.data.headers && line == 0){
-                            line++;
+                        } else {
                             next();
                         }
                     } else {
@@ -576,103 +581,94 @@ exports.getColumns = function (link) {
     // initialize first line as empty string
     var firstLine = '';
 
-    function parseFile () {
-
-        // how many lines?
-        var l = parseInt(link.data.lineCount) || 10;
-
-        // separator
-        var s = link.data.separator || getCSVSeparator(firstLine)[0];
-        s = separators[s] || s;
-
-        // charset
-        var c = link.data.charset || Charset.detect(firstLine).encoding;
-
-        // force hasHeaders to be boolean
-        link.data.hasHeaders = link.data.hasHeaders ? true : false;
-
-        // set parse options
-        var options = {
-            delimiter: s,
-            charset: c
-        };
-
-        var i = 0;
-        var lines = [];
-        var headers;
-
-        // parse the file
-        CSV.parse(path, options, function (err, row, next) {
-
-            // handle error
-            if (err) { return link.send(400, err); }
-
-            // push line or set headers
-            if (link.data.hasHeaders && i === 0) {
-                headers = row;
-            }
-            // row exits, push it
-            else if (row) {
-                lines.push(row);
-            // row is null, that means that we've read the entire file
-            } else {
-                l = i;
-            }
-
-            // go to next line
-            if (++i < l) {
-                next();
-            }
-            else {
-                // set mappings obj
-                var mappings = {
-                    // the read lines
-                    lines: lines,
-                    // separator
-                    separator: s,
-                    // charset
-                    charset: c,
-                    // how many lines
-                    lineCount: l,
-                    // the headers (an array or undefined)
-                    headers: headers,
-                    // hasHeaders: boolean
-                    hasHeaders: link.data.hasHeaders
-                };
-
-                // send response
-                link.send(200, mappings);
-            }
-        });
-    }
-
     // on data
+    var data = '';
     readStream.on('data', function (chunk) {
 
         // add chunk to firstLine
-        firstLine += chunk;
+        data += chunk;
 
-        // if we have a new line, it means that
-        // we've got the entire first line from file
-        var index = firstLine.indexOf('\n');
+        // split the file at new line to get the first line
+        var lines = data.split('\n');
 
-        // end stream if the new line has been found
-        if (index !== -1) {
-            // substring it!
-            firstLine = firstLine.substring(0, index);
+        // check if the first line exists
+        if (lines[0].length) {
+
+            // get the first line
+            firstLine = lines[0];
 
             // end stream
             readStream.close();
-        }
-    });
 
-    readStream.on('end', function () {
-        if (firstLine === '') {
-            return link.send(400, 'Empty file');
+            // start parsing the file
+            // how many lines?
+            var l = parseInt(link.data.lineCount) || 10;
+
+            // separator
+            var s = link.data.separator || getCSVSeparator(firstLine)[0];
+            s = separators[s] || s;
+
+            // charset
+            var c = link.data.charset || Charset.detect(firstLine).encoding;
+
+            // force hasHeaders to be boolean
+            link.data.hasHeaders = link.data.hasHeaders ? true : false;
+
+            // set parse options
+            var options = {
+                delimiter: s,
+                charset: c
+            };
+
+            var i = 0;
+            var lines = [];
+            var headers;
+
+            // parse the file
+            CSV.parse(path, options, function (err, row, next) {
+
+                // handle error
+                if (err) { return link.send(400, err); }
+
+                // push line or set headers
+                if (link.data.hasHeaders && i === 0) {
+                    headers = row;
+                }
+                // row exits, push it
+                else if (row && row.length) {
+                    lines.push(row);
+                // row is null, that means that we've read the entire file
+                } else {
+                    l = i;
+                }
+
+                // go to next line
+                if (++i < l) {
+                    next();
+                }
+                else {
+                    // set mappings obj
+                    var mappings = {
+                        // the read lines
+                        lines: lines,
+                        // separator
+                        separator: s,
+                        // charset
+                        charset: c,
+                        // how many lines
+                        lineCount: l,
+                        // the headers (an array or undefined)
+                        headers: headers,
+                        // hasHeaders: boolean
+                        hasHeaders: link.data.hasHeaders
+                    };
+
+                    // send response
+                    link.send(200, mappings);
+                }
+            });
         } else {
-          // parse the file if end of file and file not parsed yet
-
-          parseFile();
+            return link.send(400, 'Empty file');
         }
     });
 
@@ -680,6 +676,7 @@ exports.getColumns = function (link) {
     readStream.on('error', function (err) {
         return link.send(400, err);
     });
+
 };
 
 // private functions
