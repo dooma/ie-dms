@@ -543,21 +543,39 @@ exports.deleteFile = function (link) {
 
 exports.download = function (link) {
 
-    link.data = link.data.path || link.data;
+    // prevent bad requests
+    if (!link.data && !link.query) { return link.send(400, 'Bad Request'); }
+    if (!checkLink(link, false)) { return; }
 
-    if (!checkLink(link, true)) { return; }
+    // get the path of the file
+    var filePath;
+    if (link.data && link.data.path) {
+        filePath = link.data.path;
+    } else if (link.query && link.query.path) {
+        filePath = link.query.path;
+    } else {
+        return link.send(400, 'Missing file path');
+    }
 
-    var path = APP_DIR + '/' + link.params.inboxDir + '/' + link.data;
+    // check if the file path was added correctly
+    if (!filePath) { return link.send(500); }
 
-    if(!path) { return; }
+    var path = APP_DIR + '/' + link.params.inboxDir + '/' + filePath;
+    if(!path) { return link.send(500); }
 
-    link.res.writeHead(200, {
-        'Content-disposition': 'attachment;filename="' + link.data + '"',
-        'Content-Type': 'text/csv'
+    // check if the file exists
+    fs.exists(path, function (exists) {
+
+        if (!exists) { return link.send(404, '404 File not found'); }
+
+        // build the headers
+        link.res.writeHead(200, {
+            'Content-disposition': 'attachment;filename="' + filePath + '"',
+            'Content-Type': 'text/csv'
+        });
+        var filestream = fs.createReadStream(path);
+        filestream.pipe(link.res);
     });
-
-    var filestream = fs.createReadStream(path);
-    filestream.pipe(link.res);
 };
 
 exports.getColumns = function (link) {
