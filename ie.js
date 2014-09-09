@@ -151,6 +151,7 @@ function startExport() {
         data: {
             template: self['export'].template._id,
             query: self.query,
+            email: self['export'].email,
             options: self.queryOptions,
             hasHeaders: self['export'].headers || false,
             columns: columns,

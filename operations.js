@@ -4,6 +4,8 @@ var modm = require('modm');
 var ObjectId = modm.ObjectId;
 var Charset = require('jschardet');
 var CSV = require('a-csv');
+var mandrill = require('mandrill-api/mandrill');
+var mandrill_client;
 
 var APP_DIR = M.config.APPLICATION_ROOT + M.config.app.id;
 
@@ -470,6 +472,27 @@ exports.export = function (link) {
                     count: resultCount
                 }
             });
+
+            // send notification by email if selected
+            if (link.data.email && link.params.mandrillKey) {
+
+                // add the api key
+                mandrill_client = new mandrill.Mandrill(link.params.mandrillKey);
+
+                // build the options
+                var options = {
+                    template: link.params.notificationTemplate,
+                    to: link.session.name,
+                    link: ''
+                }
+
+                // build the download link
+                options.link = link.req.headers.origin + '/@/import/download?path=' + filename;
+
+                // send the notification
+                notifyByEmail(options);
+            }
+
         } else {
             var stream = resultCursor.stream({ transform: createTransform() });
             stream.pipe(file);
@@ -488,9 +511,60 @@ exports.export = function (link) {
                     }
                 });
             });
+
+            // send notification by email if selected
+            if (link.data.email && link.params.mandrillKey) {
+
+                // add the api key
+                mandrill_client = new mandrill.Mandrill(link.params.mandrillKey);
+
+                // build the options
+                var options = {
+                    template: link.params.notificationTemplate,
+                    to: link.session.name,
+                    link: ''
+                }
+
+                // build the download link
+                options.link = link.req.headers.origin + '/@/import/download?path=' + filename;
+
+                // send the notification
+                notifyByEmail(options);
+            }
         }
     });
 };
+
+function notifyByEmail (options) {
+
+    // build the template
+    var template = {
+        "template_name": (typeof options.template === 'object') ? options.template[M.getLocale()] : options.template,
+        "template_content": [],
+        "message": {
+            "to": [{
+                "type": "to",
+                "email": options.to
+            }],
+            "global_merge_vars": [{
+                "name": "DOWNLOAD_LINK",
+                "content": options.link
+            }]
+        }
+    };
+
+    mandrill_client.messages.sendTemplate(template, function(result) {
+
+        // check to see if rejected
+        if (result[0].status === 'rejected' || result[0].status === 'invalid') {
+            console.log(result[0].reject_reason || 'Error on sending email, check if the email provided is valid');
+        }
+
+    }, function(e) {
+        // Mandrill returns the error as an object with name and message keys
+        console.log('A mandrill error occurred: ' + e.name + ' - ' + e.message);
+    });
+}
 
 exports.readInbox = function (link) {
 
