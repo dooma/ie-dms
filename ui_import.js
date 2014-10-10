@@ -139,8 +139,11 @@ module.exports = function () {
         if (operation === 'insert') {
             $('#upsert').attr('disabled', true);
             $('.update').hide();
-        } else {
+        } else if (operation === 'update') {
             $('#upsert').removeAttr('disabled');
+            $('.update').show();
+        } else if (operation === 'delete') {
+            $('#upsert').attr('disabled', true);
             $('.update').show();
         }
     });
@@ -638,13 +641,13 @@ function gatherInfo () {
     info.separator = self.columnData.separator || self.columns.separator;
     info.charset = self.columnData.charset || "ascii";
     info.headers = self.columnData.hasHeaders || false;
-    info.update = $("[name=operation]:checked").val() === "update" ? true : false ;
+    info.operation = $("[name=operation]:checked").val();
     info.upsert = $("[name=upsert]:checked").length ? true : false;
     info.key = $("[name=mapping]:checked").closest(".form-group").find("select.field-select").attr("name") || "";
     info.mappings = self.mappings || {};
 
     // if the update option is selected get the mapping
-    if (info.update) {
+    if (info.operation === "update") {
 
         var updateMappings = {};
         var fields = $(".field-select");

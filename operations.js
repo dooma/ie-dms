@@ -83,6 +83,21 @@ function insertItem (item, templateId, role, callback) {
     M.emit('crud.create', customRequest, callback);
 }
 
+function deleteItem(query, role, templateId, callback) {
+
+    // build request
+    var customRequest = {
+        role: role,
+        templateId: ObjectId(templateId),
+        query: query,
+        options: {
+            justOne: true
+        }
+    };
+
+    M.emit('crud.delete', customRequest, callback);
+}
+
 function updateItem (item, keyValue, key, isUpsert, templateId, role, callback) {
 
     item.$set._tp = ObjectId(templateId);
@@ -179,6 +194,11 @@ function sendError (link, operation, msg) {
 exports.import = function (link) {
 
     if (!checkLink(link, true)) { return; }
+
+    // check if key is present in mappings
+    if (link.data.operation === 'update' || link.data.operation === 'delete') {
+        if (!link.data.mappings.hasOwnProperty(link.data.key)) { return link.send(400, 'Bad mappings.'); }
+    }
 
     var createRequest = {
         role: link.session.crudRole,
@@ -286,7 +306,7 @@ exports.import = function (link) {
                             //if file contains headers skip first row
                             if (!link.data.headers || line > 0) {
                                 //check if update
-                                if (link.data.update) {
+                                if (link.data.operation === 'update') {
 
                                     arrayToObjectUpdate(row, template.schema, link.data.mappings, link.data.key, function(obj, keyValue) {
 
@@ -306,12 +326,28 @@ exports.import = function (link) {
                                             next();
                                         });
                                     });
-                                } else {
+                                } else if (link.data.operation === 'insert') {
                                     var object = arrayToObject(row, template, link.data.mappings);
                                     // add the import list to this item
                                     object._li = [results[0]._id];
 
                                     insertItem(object, link.data.template, link.session.crudRole, function(err) {
+                                        line++;
+                                        if (err) {
+                                            errorCount++;
+                                        } else {
+                                            itemCount++;
+                                        }
+
+                                        next();
+                                    });
+                                } else if (link.data.operation === 'delete') {
+                                    // build delete query
+                                    var query = {};
+                                    query[link.data.key] = row[link.data.mappings[link.data.key]];
+
+                                    // delete item
+                                    deleteItem(query, link.session.crudRole, link.data.template, function (err) {
                                         line++;
                                         if (err) {
                                             errorCount++;
@@ -361,7 +397,7 @@ exports.export = function (link) {
     try {
         var customRequest = {
             role: link.session.crudRole,
-            templateId: link.data.template,
+            templateId: ObjectId(link.data.template),
             query: link.data.query,
             data: {},
             options: {},
@@ -393,7 +429,6 @@ exports.export = function (link) {
     }
 
     // we can already send the response to the client
-    link.send(200, 'OK');
 
     M.emit('crud.read', customRequest, function(err, resultCursor, resultCount) {
 
