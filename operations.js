@@ -191,13 +191,11 @@ function sendError (link, operation, msg) {
     });
 }
 
-exports.import = function (link) {
+function createList(link, callback) {
 
-    if (!checkLink(link, true)) { return; }
-
-    // check if key is present in mappings
-    if (link.data.operation === 'update' || link.data.operation === 'delete') {
-        if (!link.data.mappings.hasOwnProperty(link.data.key)) { return link.send(400, 'Bad mappings.'); }
+    // no list for delete operations
+    if (link.data.operation === 'delete') {
+        return callback(null);
     }
 
     var createRequest = {
@@ -214,10 +212,10 @@ exports.import = function (link) {
     M.emit('crud.create', createRequest, function (err, results) {
 
         if (err || !results || !results[0]) {
-            link.send(400, JSON.stringify({error: err || 'Could not create import list'}));
-            return;
+            return callback(err || 'Could not create import list');
         }
 
+        // update the list filter with the list ID
         var updateRequest = {
             role: link.session.crudRole,
             templateId: ObjectId('000000000000000000000004'),
@@ -240,98 +238,101 @@ exports.import = function (link) {
         M.emit('crud.update', updateRequest, function (err, resultCount) {
 
             if (err || !resultCount) {
-                link.send(400, JSON.stringify({error: err || 'Could not save import list'}));
+                return callback(err || 'Could not save import list');
+            }
+
+            callback(null);
+        });
+    });
+}
+
+exports.import = function (link) {
+
+    if (!checkLink(link, true)) { return; }
+
+    // check if key is present in mappings
+    if (link.data.operation === 'update' || link.data.operation === 'delete') {
+        if (!link.data.mappings.hasOwnProperty(link.data.key)) { return link.send(400, 'Bad mappings.'); }
+    }
+
+    // create an import list
+    createList(link, function(err) {
+
+        if (err) {
+            link.send(400, JSON.stringify({ error: err }));
+            return;
+        }
+
+        link.send(200, JSON.stringify({ success: 'Data imported' }));
+
+        // insert the data
+
+        // file path
+        var path = APP_DIR + '/' + link.params.inboxDir + '/' + link.data.path;
+
+        // separator
+        var separators = {
+            'COMMA': ',',
+            'SEMICOLON': ';',
+            'TAB': '\t',
+            'SPACE': ' '
+        }
+
+        var s = link.data.separator;
+        s = separators[s] || s;
+
+        // charset
+        var c = link.data.charset;
+
+        // set parse options
+        var options = {
+            // separator
+            delimiter: separators[link.data.separator] || link.data.separator,
+            // charset
+            charset: link.data.charset
+        };
+
+        // get the current template
+        var template;
+        getTemplate(link.data.template, link.session.crudRole, function(err, data){
+
+            if (err) {
+                //let the client know whe had am error
+                sendError(link, 'import', err.toString());
                 return;
             }
 
-            link.send(200, JSON.stringify({ success: 'Data imported' }));
+            template = data;
 
-            // insert the data
+            // parse the file
+            var line = 0;
+            var itemCount = 0;
+            var errorCount = 0;
 
-            // file path
-            var path = APP_DIR + '/' + link.params.inboxDir + '/' + link.data.path;
-
-            // separator
-            var separators = {
-                'COMMA': ',',
-                'SEMICOLON': ';',
-                'TAB': '\t',
-                'SPACE': ' '
-            }
-
-            var s = link.data.separator;
-            s = separators[s] || s;
-
-            // charset
-            var c = link.data.charset;
-
-            // set parse options
-            var options = {
-                // separator
-                delimiter: separators[link.data.separator] || link.data.separator,
-                // charset
-                charset: link.data.charset
-            };
-
-            // get the current template
-            var template;
-            getTemplate(link.data.template, link.session.crudRole, function(err, data){
+            CSV.parse(path, options, function (err, row, next){
 
                 if (err) {
-                    //let the client know whe had am error
+                    // let the client know we had an error
                     sendError(link, 'import', err.toString());
-
                     return;
                 }
 
-                template = data;
+                if (row) {
+                    // avoid empty row
+                    if (row.length) {
+                        // if file contains headers skip first row
+                        if (!link.data.headers || line > 0) {
+                            // check if update
+                            if (link.data.operation === 'update') {
 
-                // parse the file
-                var line = 0;
-                var itemCount = 0;
-                var errorCount = 0;
+                                arrayToObjectUpdate(row, template.schema, link.data.mappings, link.data.key, function(obj, keyValue) {
 
-                CSV.parse(path, options, function (err, row, next){
-
-                    if (err) {
-                        // let the client know we had an error
-                        sendError(link, 'import', err.toString());
-
-                        return;
-                    }
-
-                    if (row) {
-                        // avoid empty row
-                        if (row.length) {
-                            //if file contains headers skip first row
-                            if (!link.data.headers || line > 0) {
-                                //check if update
-                                if (link.data.operation === 'update') {
-
-                                    arrayToObjectUpdate(row, template.schema, link.data.mappings, link.data.key, function(obj, keyValue) {
-
-                                        var object = obj;
-                                        // add the import list to this item
-                                        object.$addToSet = {};
-                                        object.$addToSet._li = results[0]._id;
-
-                                        updateItem(object, keyValue, link.data.key, link.data.upsert, link.data.template, link.session.crudRole, function(err) {
-                                            line++;
-                                            if (err) {
-                                                errorCount++;
-                                            } else {
-                                                itemCount++;
-                                            }
-
-                                            next();
-                                        });
-                                    });
-                                } else if (link.data.operation === 'insert') {
-                                    var object = arrayToObject(row, template, link.data.mappings);
+                                    var object = obj;
                                     // add the import list to this item
-                                    object._li = [results[0]._id];
+                                    object.$addToSet = {};
+                                    object.$addToSet._li = results[0]._id;
 
-                                    insertItem(object, link.data.template, link.session.crudRole, function(err) {
+                                    updateItem(object, keyValue, link.data.key, link.data.upsert, link.data.template, link.session.crudRole, function(err) {
                                         line++;
                                         if (err) {
                                             errorCount++;
@@ -341,52 +342,73 @@ exports.import = function (link) {
 
                                         next();
                                     });
-                                } else if (link.data.operation === 'delete') {
-                                    // build delete query
-                                    var query = {};
-                                    query[link.data.key] = row[link.data.mappings[link.data.key]];
+                                });
+                            } else if (link.data.operation === 'insert') {
+                                var object = arrayToObject(row, template, link.data.mappings);
+                                // add the import list to this item
+                                object._li = [results[0]._id];
 
-                                    // delete item
-                                    deleteItem(query, link.session.crudRole, link.data.template, function (err) {
-                                        line++;
-                                        if (err) {
-                                            errorCount++;
-                                        } else {
-                                            itemCount++;
-                                        }
+                                insertItem(object, link.data.template, link.session.crudRole, function(err) {
+                                    line++;
+                                    if (err) {
+                                        errorCount++;
+                                    } else {
+                                        itemCount++;
+                                    }
 
-                                        next();
-                                    });
+                                    next();
+                                });
+                            } else if (link.data.operation === 'delete') {
+
+                                // build delete query
+                                var query = {};
+                                query[link.data.key] = row[link.data.mappings[link.data.key]];
+
+                                // protect against unintentional data deletion when keys are empty
+                                if (!row[link.data.mappings[link.data.key]]) {
+                                    return next();
                                 }
-                            } else if (link.data.headers && line == 0){
-                                line++;
-                                next();
+
+                                // delete item
+                                deleteItem(query, link.session.crudRole, link.data.template, function (err, data) {
+                                    line++;
+                                    if (err) {
+                                        errorCount++;
+                                    } else {
+                                        itemCount++;
+                                    }
+
+                                    next();
+                                });
                             }
-                        } else {
+                        } else if (link.data.headers && line == 0){
+                            line++;
                             next();
                         }
                     } else {
-                        // TODO the next function above is called one more time after the row comes nulli
-                        // and this code will also be called twice
-                        M.emit('sockets.send', {
-                            dest: link.session._sid,
-                            type: 'session',
-                            event: 'ie',
-                            data: {
-                                operation: 'import',
-                                file: link.data.path,
-                                template: link.data.template,
-                                count: itemCount
-                            }
-                        });
+                        next();
                     }
-                });
-
-                link.send(200, JSON.stringify({success: 'Data imported'}));
+                } else {
+                    // TODO the next function above is called one more time after the row comes nulli
+                    // and this code will also be called twice
+                    M.emit('sockets.send', {
+                        dest: link.session._sid,
+                        type: 'session',
+                        event: 'ie',
+                        data: {
+                            operation: 'import',
+                            file: link.data.path,
+                            template: link.data.template,
+                            count: itemCount
+                        }
+                    });
+                }
             });
 
-            //TODO give an appropriate notification message when the operation is complete
+            link.send(200, JSON.stringify({success: 'Data imported'}));
         });
+
+        //TODO give an appropriate notification message when the operation is complete
     });
 };
 
