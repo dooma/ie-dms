@@ -6,9 +6,13 @@ module.exports = function () {
 
     // process UI config
     self.config['import'].ui.selectors = self.config['import'].ui.selectors || {};
+    self.config['import'].ui.operationChange = self.config['import'].ui.operationChange || { selector: '.operation', event: 'change', value: 'value' };
     self.config['import'].ui.selectors.waiter = self.config['import'].ui.selectors.waiter || '.waiter';
     self.config['import'].ui.selectors.inboxPage = self.config['import'].ui.selectors.inboxPage || '#inbox';
     self.config['import'].ui.selectors.mappingPage = self.config['import'].ui.selectors.mappingPage || '#mapping';
+    self.config['import'].ui.selectors.operationName = self.config['import'].ui.selectors.operationName || '.operation-name';
+    self.config['import'].ui.selectors.operationDo = self.config['import'].ui.selectors.operationDo || '.operation-do';
+    self.config['import'].ui.selectors.operationCancel = self.config['import'].ui.selectors.operationCancel || '.operation-cancel';
     // file list
     self.config['import'].ui.selectors.file = self.config['import'].ui.selectors.file || '.file';
     self.config['import'].ui.selectors.files = self.config['import'].ui.selectors.files || '.files';
@@ -21,11 +25,9 @@ module.exports = function () {
     self.config['import'].ui.selectors.fields = self.config['import'].ui.selectors.fields || '.fields';
     self.config['import'].ui.selectors.template = self.config['import'].ui.selectors.template || '.template';
     self.config['import'].ui.selectors.mappingPath = self.config['import'].ui.selectors.mappingPath || '.path';
-    self.config['import'].ui.selectors.mappingBack = self.config['import'].ui.selectors.mappingBack || '.back';
     self.config['import'].ui.selectors.templateSel = self.config['import'].ui.selectors.templateSel || '.field-template';
     self.config['import'].ui.selectors.nameSel = self.config['import'].ui.selectors.nameSel || '.field-name';
     self.config['import'].ui.selectors.fieldSelectSel = self.config['import'].ui.selectors.fieldSelectSel || '.field-select';
-    self.config['import'].ui.selectors.mappingImport = self.config['import'].ui.selectors.mappingImport || '.import-btn';
     self.config['import'].ui.selectors.fieldRequired = self.config['import'].ui.selectors.fieldRequired || '.required';
 
     // the waiter
@@ -55,11 +57,13 @@ module.exports = function () {
     // columnData cache
     self.columnData = {};
 
-    $(self.dom).on('click', self.config['import'].ui.selectors.mappingBack, function() {
+    self.operation = 'insert';
+
+    $(self.dom).on('click', self.config['import'].ui.selectors.operationCancel, function() {
         self.emit('reset');
     });
 
-    $(self.dom).on('click', self.config['import'].ui.selectors.mappingImport, function () {
+    $(self.dom).on('click', self.config['import'].ui.selectors.operationDo, function () {
         self.emit('import');
     });
 
@@ -114,7 +118,7 @@ module.exports = function () {
         var option = $(this).attr('data-option');
 
         // update column data
-        self.columnData[option] = $(this).attr("type") !== "checkbox" ? $(this).val() : $(this).prop("checked");
+        self.columnData[option] = $(this).attr('type') !== 'checkbox' ? $(this).val() : $(this).prop('checked');
 
         // and show mappings
         self.emit('_showMappings', function(err) {
@@ -126,25 +130,47 @@ module.exports = function () {
 
             resetMappings.call(self);
             self.emit('_refreshTable');
-            self.emit("_refreshFields");
+            self.emit('_refreshFields');
         });
 
     });
 
-    // TODO remove hardcoded selectors
-    $(document).on('change', 'input[name=operation]:radio', function () {
+    // changes to the operation controls
+    $(document).on(self.config['import'].ui.operationChange.event, self.config['import'].ui.operationChange.selector, function () {
 
-        var operation = $('input[name=operation]:radio:checked').val();
+        // handle radio buttons or checkboxes
+        if ($(self.config['import'].ui.operationChange.selector).first().prop('tagName') === 'INPUT') {
+            self.operation = 'insert';
+            $(self.config['import'].ui.operationChange.selector).each(function () {
+                if ($(this).prop('checked')) {
+                    self.operation = $(this).attr(self.config['import'].ui.operationChange.value);
+                }
+            });
+        }
+        // handle other DOM elements
+        else {
+            self.operation = $(this).attr(self.config['import'].ui.operationChange.value);
+        }
 
-        if (operation === 'insert') {
+        if (!self.operation) {
+            return;
+        }
+
+        // give the import button a better name
+        $(self.config['import'].ui.selectors.operationName).text(self.operation.charAt(0).toUpperCase() + self.operation.slice(1));
+
+        if (self.operation === 'insert') {
             $('#upsert').attr('disabled', true);
             $('.update').hide();
-        } else if (operation === 'update') {
+            $('.delete').hide();
+        } else if (self.operation === 'update') {
             $('#upsert').removeAttr('disabled');
+            $('.delete').hide();
             $('.update').show();
-        } else if (operation === 'delete') {
+        } else if (self.operation === 'delete') {
             $('#upsert').attr('disabled', true);
-            $('.update').show();
+            $('.update').hide();
+            $('.delete').show();
         }
     });
 
@@ -224,13 +250,38 @@ function importData () {
     // getting required info
     var info = gatherInfo.call(self);
 
+    //
+    // operation checks
+    //
+
+    // no mappings, no fun
+    if (!Object.keys(info.mappings).length) {
+        self.emit('notifications.show', {
+            type: 'error',
+            message: 'You must map the columns in the CSV file with some template fields'
+        });
+        return;
+    }
+
+    // update and delete operations need a query key
+    if (['delete', 'update'].indexOf(info.operation) !== -1) {
+        if (!info.key) {
+            self.emit('notifications.show', {
+                type: 'error',
+                message: 'You must select a key field for this operation'
+            });
+            return;
+        }
+    }
+
     // calling server operation
     self.link('import', { data: info }, function (err) {
 
+        // TODO add translations
         var notificationMessage = {
-            de: "Importen startet.",
-            fr: "Impotaux startaux.",
-            it: "Importi starti."
+            de: 'Importen startet.',
+            fr: 'Impotaux startaux.',
+            it: 'Importi starti.'
         }
 
         self.emit('notifications.show', {
@@ -391,7 +442,7 @@ function appendFile (file) {
         // if module has i18n
         if (self.config.i18n) {
             // emit message event for i18n module
-            self.emit("message", deleteEnglishMessage, function (err, translatedData) {
+            self.emit('message', deleteEnglishMessage, function (err, translatedData) {
                 // get the translated message
                 if (confirm(translatedData.message)) {
                     // if confirmed, call delete file function
@@ -424,7 +475,7 @@ function setTemplates () {
         var name = self.templates[templateId].options.label[M.getLocale()] || self.templates[templateId].options.label;
 
         if (self.templates[templateId].options.group) {
-            name = self.templates[templateId].options.group + " - " + name;
+            name = self.templates[templateId].options.group + ' - ' + name;
         }
 
         var $option = $('<option>').attr('value', value).text(name);
@@ -445,13 +496,13 @@ function download (path) {
     var self = this;
 
     // create a form
-    var $form = $("<form>").attr({
-        "action": "/@/" + self.miid + "/download",
-        "method": "POST"
+    var $form = $('<form>').attr({
+        'action': '/@/' + self.miid + '/download',
+        'method': 'POST'
     });
 
     // append some inputs
-    $form.append($("<input>").val(path).attr("name", "path"));
+    $form.append($('<input>').val(path).attr('name', 'path'));
 
     // submit the form
     $form.submit();
@@ -508,9 +559,9 @@ function showMappings (callback) {
 
         // column translations
         var COLUMN_TEXT = {
-            de : "Spalte",
-            fr : "Colonne",
-            it : "Colonna"
+            de : 'Spalte',
+            fr : 'Colonne',
+            it : 'Colonna'
         }
 
         for (var j = 0; j < firstLine.length; ++j) {
@@ -639,35 +690,40 @@ function gatherInfo () {
     info.path = self.columnData.path;
     info.template = $(self.config['import'].ui.selectors.template).val();
     info.separator = self.columnData.separator || self.columns.separator;
-    info.charset = self.columnData.charset || "ascii";
+    info.charset = self.columnData.charset || 'ascii';
     info.headers = self.columnData.hasHeaders || false;
-    info.operation = $("[name=operation]:checked").val();
-    info.upsert = $("[name=upsert]:checked").length ? true : false;
-    info.key = $("[name=mapping]:checked").closest(".form-group").find("select.field-select").attr("name") || "";
+    info.operation = self.operation;
     info.mappings = self.mappings || {};
 
-    // if the update option is selected get the mapping
-    if (info.operation === "update") {
+    if (['delete', 'update'].indexOf(info.operation) !== -1) {
+        // both the update and the delete operations have a query key
+        info.key = $('[name=mapping]:checked').closest('.form-group').find('select.field-select').attr('name') || '';
 
-        var updateMappings = {};
-        var fields = $(".field-select");
-        for (var i = 0, l = fields.length; i < l; ++ i) {
+        // if the update option is selected get the mapping
+        if (info.operation === 'update') {
+            info.upsert = $('[name=upsert]:checked').length ? true : false;
 
-            var fieldVal = $(fields[i]).val();
+            var updateMappings = {};
+            var fields = $('.field-select');
+            for (var i = 0, l = fields.length; i < l; ++ i) {
 
-            if (fieldVal) {
-                var templateKey = $(fields[i]).attr("name");
+                var fieldVal = $(fields[i]).val();
 
-                if (schema[templateKey].type === "number") {
-                    var operator = $(fields[i]).closest(".form-group").find("div.operator>select").val();
-                    updateMappings[templateKey] = { value: fieldVal, operator: operator};
-                } else {
-                    updateMappings[templateKey] = { value: fieldVal };
+                if (fieldVal) {
+                    var templateKey = $(fields[i]).attr('name');
+
+                    if (schema[templateKey].type === 'number') {
+                        var operator = $(fields[i]).closest('.form-group').find('div.operator>select').val();
+                        updateMappings[templateKey] = { value: fieldVal, operator: operator};
+                    } else {
+                        updateMappings[templateKey] = { value: fieldVal };
+                    }
                 }
             }
+            info.mappings = updateMappings;
         }
-        info.mappings = updateMappings;
     }
 
     return info;
 }
+

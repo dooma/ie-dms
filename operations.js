@@ -68,12 +68,14 @@ function arrayToObjectUpdate(data, schema, mappings, key, callback) {
     callback(obj, keyValue);
 }
 
-function insertItem (item, templateId, role, callback) {
+function insertItem (item, templateId, session, callback) {
 
     item._tp = ObjectId(templateId);
 
+    // build request
     var customRequest = {
-        role: role,
+        role: session.crudRole,
+        session: session,
         templateId: ObjectId(templateId),
         data: item,
         options: {},
@@ -83,11 +85,12 @@ function insertItem (item, templateId, role, callback) {
     M.emit('crud.create', customRequest, callback);
 }
 
-function deleteItem(query, role, templateId, callback) {
+function deleteItem(query, templateId, session, callback) {
 
     // build request
     var customRequest = {
-        role: role,
+        role: session.crudRole,
+        session: session,
         templateId: ObjectId(templateId),
         query: query,
         options: {
@@ -98,12 +101,15 @@ function deleteItem(query, role, templateId, callback) {
     M.emit('crud.delete', customRequest, callback);
 }
 
-function updateItem (item, keyValue, key, isUpsert, templateId, role, callback) {
+function updateItem (item, keyValue, key, isUpsert, templateId, session, callback) {
 
     item.$set._tp = ObjectId(templateId);
+
+    // build request
     var query = {};
     var customRequest = {
-        role: role,
+        role: session.crudRole,
+        session: session,
         templateId: ObjectId(templateId),
         data: item,
         options: {
@@ -241,7 +247,7 @@ function createList(link, callback) {
                 return callback(err || 'Could not save import list');
             }
 
-            callback(null);
+            callback(null, results[0]);
         });
     });
 }
@@ -250,20 +256,31 @@ exports.import = function (link) {
 
     if (!checkLink(link, true)) { return; }
 
-    // check if key is present in mappings
-    if (link.data.operation === 'update' || link.data.operation === 'delete') {
-        if (!link.data.mappings.hasOwnProperty(link.data.key)) { return link.send(400, 'Bad mappings.'); }
+    // checks
+    if (['update', 'delete'].indexOf(link.data.operation) !== -1) {
+        // check if we have a key
+        if (!link.data.key) {
+            // TODO translations
+            return link.send(400, 'Missing operasion key. Please choose a template field as key.');
+        }
+
+        // check if key is present in mappings
+        if (!link.data.mappings.hasOwnProperty(link.data.key)) {
+            // TODO translations
+            return link.send(400, 'Bad mappings. The key must be one of the mapped columns');
+        }
     }
 
     // create an import list
-    createList(link, function(err) {
+    createList(link, function(err, list) {
 
         if (err) {
             link.send(400, JSON.stringify({ error: err }));
             return;
         }
 
-        link.send(200, JSON.stringify({ success: 'Data imported' }));
+        // TODO translations
+        link.send(200, JSON.stringify({ success: 'Data import started' }));
 
         // insert the data
 
@@ -294,10 +311,10 @@ exports.import = function (link) {
 
         // get the current template
         var template;
-        getTemplate(link.data.template, link.session.crudRole, function(err, data){
+        getTemplate(link.data.template, link.session.crudRole, function(err, data) {
 
             if (err) {
-                //let the client know whe had am error
+                // let the client know whe had am error
                 sendError(link, 'import', err.toString());
                 return;
             }
@@ -309,7 +326,7 @@ exports.import = function (link) {
             var itemCount = 0;
             var errorCount = 0;
 
-            CSV.parse(path, options, function (err, row, next){
+            CSV.parse(path, options, function (err, row, next) {
 
                 if (err) {
                     // let the client know we had an error
@@ -330,9 +347,9 @@ exports.import = function (link) {
                                     var object = obj;
                                     // add the import list to this item
                                     object.$addToSet = {};
-                                    object.$addToSet._li = results[0]._id;
+                                    object.$addToSet._li = list._id;
 
-                                    updateItem(object, keyValue, link.data.key, link.data.upsert, link.data.template, link.session.crudRole, function(err) {
+                                    updateItem(object, keyValue, link.data.key, link.data.upsert, link.data.template, link.session, function(err) {
                                         line++;
                                         if (err) {
                                             errorCount++;
@@ -343,12 +360,15 @@ exports.import = function (link) {
                                         next();
                                     });
                                 });
-                            } else if (link.data.operation === 'insert') {
+                            }
+                            else if (link.data.operation === 'insert') {
+
                                 var object = arrayToObject(row, template, link.data.mappings);
                                 // add the import list to this item
-                                object._li = [results[0]._id];
+                                object._li = [list._id];
 
-                                insertItem(object, link.data.template, link.session.crudRole, function(err) {
+                                insertItem(object, link.data.template, link.session, function(err) {
+
                                     line++;
                                     if (err) {
                                         errorCount++;
@@ -358,7 +378,8 @@ exports.import = function (link) {
 
                                     next();
                                 });
-                            } else if (link.data.operation === 'delete') {
+                            }
+                            else if (link.data.operation === 'delete') {
 
                                 // build delete query
                                 var query = {};
@@ -370,7 +391,8 @@ exports.import = function (link) {
                                 }
 
                                 // delete item
-                                deleteItem(query, link.session.crudRole, link.data.template, function (err, data) {
+                                deleteItem(query, link.data.template, link.session, function (err, data) {
+
                                     line++;
                                     if (err) {
                                         errorCount++;
