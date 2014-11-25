@@ -6,7 +6,7 @@ module.exports = function () {
 
     // process UI config
     self.config['import'].ui.selectors = self.config['import'].ui.selectors || {};
-    self.config['import'].ui.operationChange = self.config['import'].ui.operationChange || { selector: '.operation', event: 'change', value: 'value' };
+    self.config['import'].ui.operationChange = self.config['import'].ui.operationChange || { selector: '.operation', event: 'change', attribute: 'value' };
     self.config['import'].ui.selectors.waiter = self.config['import'].ui.selectors.waiter || '.waiter';
     self.config['import'].ui.selectors.inboxPage = self.config['import'].ui.selectors.inboxPage || '#inbox';
     self.config['import'].ui.selectors.mappingPage = self.config['import'].ui.selectors.mappingPage || '#mapping';
@@ -143,7 +143,7 @@ module.exports = function () {
             self.operation = 'insert';
             $(self.config['import'].ui.operationChange.selector).each(function () {
                 if ($(this).prop('checked')) {
-                    self.operation = $(this).attr(self.config['import'].ui.operationChange.value);
+                    self.operation = $(this).attr(self.config['import'].ui.operationChange.attribute);
                 }
             });
         }
