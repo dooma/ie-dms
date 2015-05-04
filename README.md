@@ -8,6 +8,9 @@ Import-Export module for DMS application
 ### dev
  - add new fixes and features here
 
+### v0.3.1
+ - Updated to Bind `v0.3.2`
+
 ### v0.3.0
  - Enhanced and fixed the `delete` operation
  - Renamed selector configuration properties
