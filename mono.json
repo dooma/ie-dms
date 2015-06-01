@@ -1,13 +1,13 @@
 {
     "source": "github",
-    "owner": "jillix",
+    "owner": "jxmono",
     "name": "ie-dms",
     "dependencies": [
         "/ie.js",
         "/ui_export.js",
         "/ui_import.js",
-        "github/jillix/bind/v0.3.2",
-        "github/jillix/events/v0.3.0"
+        "github/jxmono/bind/v0.4.0",
+        "github/jxmono/events/v0.4.0"
     ],
     "operations": [
         { "file": "operations.js", "function": "readInbox" },
