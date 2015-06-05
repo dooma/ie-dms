@@ -1,7 +1,7 @@
 var ui_export = require('./ui_export');
 var ui_import = require('./ui_import');
-var Bind = require('github/jillix/bind');
-var Events = require('github/jillix/events');
+var Bind = require('github/jxmono/bind');
+var Events = require('github/jxmono/events');
 
 module.exports = function (config) {
 
