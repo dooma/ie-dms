@@ -261,7 +261,7 @@ exports.import = function (link) {
         // check if we have a key
         if (!link.data.key) {
             // TODO translations
-            return link.send(400, 'Missing operasion key. Please choose a template field as key.');
+            return link.send(400, 'Missing operation key. Please choose a template field as key.');
         }
 
         // check if key is present in mappings
@@ -325,6 +325,7 @@ exports.import = function (link) {
             var line = 0;
             var itemCount = 0;
             var errorCount = 0;
+            var firstError;
 
             CSV.parse(path, options, function (err, row, next) {
 
@@ -353,6 +354,9 @@ exports.import = function (link) {
                                         line++;
                                         if (err) {
                                             errorCount++;
+                                            if (!firstError) {
+                                                firstError = err;
+                                            }
                                         } else {
                                             itemCount++;
                                         }
@@ -368,10 +372,12 @@ exports.import = function (link) {
                                 object._li = [list._id];
 
                                 insertItem(object, link.data.template, link.session, function(err) {
-
                                     line++;
                                     if (err) {
                                         errorCount++;
+                                        if (!firstError) {
+                                            firstError = err;
+                                        }
                                     } else {
                                         itemCount++;
                                     }
@@ -396,6 +402,9 @@ exports.import = function (link) {
                                     line++;
                                     if (err) {
                                         errorCount++;
+                                        if (!firstError) {
+                                            firstError = err;
+                                        }
                                     } else {
                                         itemCount++;
                                     }
@@ -413,7 +422,7 @@ exports.import = function (link) {
                 } else {
                     // TODO the next function above is called one more time after the row comes nulli
                     // and this code will also be called twice
-                    M.emit('sockets.send', {
+                    var result = {
                         dest: link.session._sid,
                         type: 'session',
                         event: 'ie',
@@ -423,7 +432,14 @@ exports.import = function (link) {
                             template: link.data.template,
                             count: itemCount
                         }
-                    });
+                    };
+                    if (itemCount === 0 && errorCount !== 0) {
+                        result.data.status = 'error';
+                        result.data.errorCount = errorCount;
+                        result.data.firstError = firstError.toString();
+                    }
+
+                    M.emit('sockets.send', result);
                 }
             });
 
