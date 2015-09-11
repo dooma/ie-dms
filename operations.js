@@ -490,7 +490,7 @@ exports.export = function (link) {
 
     // we can already send the response to the client
 
-    M.emit('crud.read', customRequest, function(err, resultCursor, resultCount) {
+    M.emit('crud.read', customRequest, function(err, resultCursor) {
 
         if (err) {
             // let the client know we had an error
@@ -556,16 +556,31 @@ exports.export = function (link) {
             }
 
             // let the client know we are done
-            M.emit('sockets.send', {
-                dest: link.session._sid,
-                type: 'session',
-                event: 'ie',
-                data: {
-                    operation: 'export',
-                    file: filename,
-                    template: link.data.template,
-                    count: resultCount
+            M.emit('crud.read', {
+                role: link.session.crudRole,
+                templateId: ObjectId(link.data.template),
+                query: link.data.query,
+                data: {},
+                options: {},
+                onlyCount: true,
+                method: 'read'
+            }, function (err, count) {
+
+                if (err) {
+                    return;
                 }
+
+                M.emit('sockets.send', {
+                    dest: link.session._sid,
+                    type: 'session',
+                    event: 'ie',
+                    data: {
+                        operation: 'export',
+                        file: filename,
+                        template: link.data.template,
+                        count: count
+                    }
+                });
             });
 
             // send notification by email if selected
@@ -594,16 +609,31 @@ exports.export = function (link) {
 
             stream.on('end', function () {
                 // let the client know we are done
-                M.emit('sockets.send', {
-                    dest: link.session._sid,
-                    type: 'session',
-                    event: 'ie',
-                    data: {
-                        operation: 'export',
-                        file: filename,
-                        template: link.data.template,
-                        count: resultCount
+                M.emit('crud.read', {
+                    role: link.session.crudRole,
+                    templateId: ObjectId(link.data.template),
+                    query: link.data.query,
+                    data: {},
+                    options: {},
+                    onlyCount: true,
+                    method: 'read'
+                }, function (err, count) {
+
+                    if (err) {
+                        return;
                     }
+
+                    M.emit('sockets.send', {
+                        dest: link.session._sid,
+                        type: 'session',
+                        event: 'ie',
+                        data: {
+                            operation: 'export',
+                            file: filename,
+                            template: link.data.template,
+                            count: count
+                        }
+                    });
                 });
             });
 
