@@ -502,7 +502,10 @@ function download (path) {
     });
 
     // append some inputs
-    $form.append($('<input>').val(path).attr('name', 'path'));
+    $form
+        .append($('<input>').val(path).attr('name', 'path'))
+        .hide()
+        .appendTo(document.body);
 
     // submit the form
     $form.submit();

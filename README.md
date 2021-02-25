@@ -5,6 +5,9 @@ Import-Export module for DMS application
 
 ## Changelog
 
+### v0.4.2
+ - Fixed download operation caused by forms being canceled if not attached to body
+
 ### v0.4.1
  - Fixed the export item count
 
